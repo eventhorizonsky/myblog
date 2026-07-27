@@ -101,7 +101,7 @@ images:
 ```json
 {
   "games": [{
-    "linkId": 184648002,
+    "linkId": 111111,
     "gameName": "007 初露锋芒",
     "steamAppId": 3768760,
     "coverImage": "https://...",
