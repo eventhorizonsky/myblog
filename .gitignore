@@ -29,16 +29,18 @@ logs/
 *.log
 npm-debug.log*
 
-# Sync state (generated content tracking)
+# Sync state
 **/.sync-state.json
 
 # Downloaded images
 **/content-images/
 
-# Content (synced from Heihe - gitignore or git track as you prefer)
-# content/articles/
-# content/games/
+# Synced content (optional: git track if you want)
+content/articles/
 
-# Go (future)
-backend/server
+# Go
+backend/myblog-server*
 backend/tmp/
+
+# OS
+Thumbs.db

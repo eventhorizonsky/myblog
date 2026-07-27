@@ -1,29 +1,25 @@
 # Stage 1: Build Vue frontend
-FROM node:22-alpine AS builder
+FROM node:22-alpine AS frontend-builder
 WORKDIR /app
-
-# Copy frontend package files and install
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm ci
-
-# Copy frontend source and content
 COPY frontend/ ./
-
-# Copy synced content if exists (mounted at build time)
-# Content should be pre-synced or mounted via docker build --build-arg
-
-# Build
 RUN npm run build
 
-# Stage 2: Serve with nginx
-FROM nginx:alpine
+# Stage 2: Build Go backend
+FROM golang:1.23-alpine AS backend-builder
+WORKDIR /app
+COPY backend/go.mod backend/go.sum ./
+RUN GOPROXY=https://goproxy.cn,direct go mod download
+COPY backend/ ./
+RUN CGO_ENABLED=0 go build -o /server .
 
-# Copy custom nginx config for SPA
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Copy built files
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+# Stage 3: Runtime
+FROM alpine:3.20
+RUN apk add --no-cache ca-certificates tzdata
+ENV TZ=Asia/Shanghai
+COPY --from=backend-builder /server /app/server
+COPY --from=frontend-builder /app/dist /app/dist
+ENV DIST_DIR=/app/dist
+EXPOSE 8080
+CMD ["/app/server"]

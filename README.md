@@ -4,7 +4,7 @@
 
 ## 技术栈
 
-Vue 3 + Vite + Tailwind CSS + Markdown
+Vue 3 + Vite + Tailwind CSS + Markdown + Go
 
 ## 目录结构
 
@@ -110,6 +110,36 @@ images:
   }]
 }
 ```
+
+## 环境变量
+
+| 变量 | 必需 | 说明 |
+|------|------|------|
+| `HEIBOX_COOKIE` | 同步 | PC Web Cookie，拉取完整文章内容 |
+| `HEIBOX_MOBILE_COOKIE` | 后端 | 手机端 Cookie，获取游戏战绩数据 |
+| `HEIBOX_USER_ID` | 可选 | 小黑盒用户 ID（Cookie 中可自动提取） |
+| `HEIBOX_OS_VERSION` | 可选 | 手机 API 的 os_version 参数（默认 12） |
+
+### 本地开发
+
+```bash
+# Go 后端
+cd backend
+export HEIBOX_MOBILE_COOKIE="pkey=xxx;x_xhh_tokenid=xxx"
+export GOPROXY="https://goproxy.cn,direct"
+go run .
+
+# 前端（dev 模式自动代理 /api → localhost:8080）
+cd frontend
+npm run dev
+```
+
+### 后端 API
+
+| 端点 | 说明 |
+|------|------|
+| `GET /api/game-stats` | 游戏战绩卡片（24h 缓存，失败返回旧数据） |
+| `GET /api/health` | 健康检查 |
 
 ## 部署
 
