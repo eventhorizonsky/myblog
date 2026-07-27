@@ -10,7 +10,7 @@ RUN npm run build
 FROM golang:1.23-alpine AS backend-builder
 WORKDIR /app
 COPY backend/go.mod backend/go.sum ./
-RUN GOPROXY=https://goproxy.cn,direct go mod download
+RUN go mod download
 COPY backend/ ./
 RUN CGO_ENABLED=0 go build -o /server .
 
