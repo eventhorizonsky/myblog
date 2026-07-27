@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+dist-ssr/
+*.local
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Sync state (generated content tracking)
+**/.sync-state.json
+
+# Downloaded images
+**/content-images/
+
+# Content (synced from Heihe - gitignore or git track as you prefer)
+# content/articles/
+# content/games/
+
+# Go (future)
+backend/server
+backend/tmp/
