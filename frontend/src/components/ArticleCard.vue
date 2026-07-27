@@ -37,9 +37,7 @@ const catConfig = CATEGORY_CONFIG[props.article.category] || CATEGORY_CONFIG.gen
             {{ article.date }}
           </span>
         </div>
-        <h3 class="font-semibold text-sm group-hover:text-primary transition-colors line-clamp-2 mb-1">
-          {{ article.title }}
-        </h3>
+        <h3 class="font-semibold text-sm group-hover:text-primary transition-colors line-clamp-2 mb-1" v-html="article.title" />
         <p class="text-xs text-muted-foreground line-clamp-2">
           {{ article.excerpt }}
         </p>

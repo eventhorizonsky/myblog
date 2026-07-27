@@ -5,8 +5,30 @@ const md = new MarkdownIt({
   html: true,
   linkify: true,
   typographer: true,
-  breaks: true, // 单换行 → <br>
+  breaks: true,
 });
+
+/** 加载表情映射 [cube_喜欢] → img URL */
+let emojiMap: Record<string, { img: string; code: string }> = {};
+async function loadEmojis() {
+  try {
+    const res = await fetch(`${import.meta.env.BASE_URL}content/emojis.json`);
+    if (res.ok) emojiMap = await res.json();
+  } catch { /* emoji data not available */ }
+}
+loadEmojis();
+
+/** 将 [cube_xxx] 格式的表情码替换为 <img> */
+function replaceEmojis(html: string): string {
+  return html.replace(/\[([a-z]+)_([^\]]+)\]/g, (match, group, code) => {
+    const key = `[${group}_${code}]`;
+    const emoji = emojiMap[key];
+    if (emoji) {
+      return `<img src="${emoji.img}" alt="${emoji.code}" class="emoji-inline" loading="lazy" />`;
+    }
+    return match; // 不认识的表情码保持原样
+  });
+}
 
 /** 导入所有 articles 目录下的 .md 文件 */
 const articleFiles = import.meta.glob<string>("../../content/articles/**/*.md", {
@@ -60,10 +82,11 @@ export function parseArticle(rawMd: string): { meta: ArticleMeta; html: string }
     Object.assign(meta, rawMeta);
   }
 
-  const html = md.render(content);
+  const html = replaceEmojis(md.render(content));
+  const titleHtml = replaceEmojis(meta.title);
   const excerpt = content.replace(/[#*`>\[\]()!\-\n\r]/g, "").slice(0, 120).trim();
 
-  return { meta: { ...meta, excerpt }, html };
+  return { meta: { ...meta, title: titleHtml, excerpt }, html };
 }
 
 /** 从所有 .md 文件构建文章列表 */

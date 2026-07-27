@@ -1,0 +1,626 @@
+{
+  "[cube_灵光一闪]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_181.png",
+    "code": "灵光一闪"
+  },
+  "[cube_摘墨镜]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_104.png",
+    "code": "摘墨镜"
+  },
+  "[cube_喜欢]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_14.png",
+    "code": "喜欢"
+  },
+  "[cube_哭泣]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_11.png",
+    "code": "哭泣"
+  },
+  "[cube_滑稽]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_34.png",
+    "code": "滑稽"
+  },
+  "[cube_感动]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_24.png",
+    "code": "感动"
+  },
+  "[cube_捂脸哭]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_22.png",
+    "code": "捂脸哭"
+  },
+  "[cube_doge]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_13.png",
+    "code": "doge"
+  },
+  "[cube_惊讶]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_16.png",
+    "code": "惊讶"
+  },
+  "[cube_窝囊]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_101.png",
+    "code": "窝囊"
+  },
+  "[cube_乖]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_31.png",
+    "code": "乖"
+  },
+  "[cube_笑cry]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_32.png",
+    "code": "笑cry"
+  },
+  "[cube_开心]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_21.png",
+    "code": "开心"
+  },
+  "[cube_微笑]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_62.png",
+    "code": "微笑"
+  },
+  "[cube_欧润吉]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_134.png",
+    "code": "欧润吉"
+  },
+  "[cube_摸摸头]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_102.png",
+    "code": "摸摸头"
+  },
+  "[cube_悟空]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_105.png",
+    "code": "悟空"
+  },
+  "[cube_电牛]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_103.png",
+    "code": "电牛"
+  },
+  "[cube_委屈]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_25.png",
+    "code": "委屈"
+  },
+  "[cube_僵尸]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_95.png",
+    "code": "僵尸"
+  },
+  "[cube_打脸]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_51.png",
+    "code": "打脸"
+  },
+  "[cube_小鸡]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_96.png",
+    "code": "小鸡"
+  },
+  "[cube_并不简单]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_26.png",
+    "code": "并不简单"
+  },
+  "[cube_沧桑]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_35.png",
+    "code": "沧桑"
+  },
+  "[cube_超人]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_94.png",
+    "code": "超人"
+  },
+  "[cube_酷]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_12.png",
+    "code": "酷"
+  },
+  "[cube_黑人问号]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_15-1.png",
+    "code": "黑人问号"
+  },
+  "[cube_赞]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_41.png",
+    "code": "赞"
+  },
+  "[cube_喷水]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_46.png",
+    "code": "喷水"
+  },
+  "[cube_生气]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_53.png",
+    "code": "生气"
+  },
+  "[cube_闭嘴]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_55.png",
+    "code": "闭嘴"
+  },
+  "[cube_晕]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_23.png",
+    "code": "晕"
+  },
+  "[cube_比心]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_82.png",
+    "code": "比心"
+  },
+  "[cube_握草]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_85.png",
+    "code": "握草"
+  },
+  "[cube_怒]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_33.png",
+    "code": "怒"
+  },
+  "[cube_加油]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_44.png",
+    "code": "加油"
+  },
+  "[cube_上学-乐]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_91.png",
+    "code": "上学-乐"
+  },
+  "[cube_炒菜]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_174.png",
+    "code": "炒菜"
+  },
+  "[cube_汗]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_64.png",
+    "code": "汗"
+  },
+  "[cube_嬉水女王]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_112.png",
+    "code": "嬉水女王"
+  },
+  "[cube_凄凉]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_36.png",
+    "code": "凄凉"
+  },
+  "[cube_wota]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_83.png",
+    "code": "wota"
+  },
+  "[cube_摊手]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_45.png",
+    "code": "摊手"
+  },
+  "[cube_哇]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_63.png",
+    "code": "哇"
+  },
+  "[cube_吐]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_56.png",
+    "code": "吐"
+  },
+  "[cube_困]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_54.png",
+    "code": "困"
+  },
+  "[cube_吃鸡啦]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_115.png",
+    "code": "吃鸡啦"
+  },
+  "[cube_鹅]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_84.png",
+    "code": "鹅"
+  },
+  "[cube_叹气]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_43.png",
+    "code": "叹气"
+  },
+  "[cube_害羞]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_146.png",
+    "code": "害羞"
+  },
+  "[cube_吃瓜]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_151.png",
+    "code": "吃瓜"
+  },
+  "[cube_比耶]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_154.png",
+    "code": "比耶"
+  },
+  "[cube_良民]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_111.png",
+    "code": "良民"
+  },
+  "[cube_鸡毙你]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_116.png",
+    "code": "鸡毙你"
+  },
+  "[cube_吓]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_65.png",
+    "code": "吓"
+  },
+  "[cube_菜doge]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_152.png",
+    "code": "菜doge"
+  },
+  "[cube_浪人砍一刀]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_114.png",
+    "code": "浪人砍一刀"
+  },
+  "[cube_学习]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_42.png",
+    "code": "学习"
+  },
+  "[cube_庆祝-圣诞]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_74.png",
+    "code": "庆祝-圣诞"
+  },
+  "[cube_这是什么鸟]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_86.png",
+    "code": "这是什么鸟"
+  },
+  "[cube_庆祝]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_73.png",
+    "code": "庆祝"
+  },
+  "[cube_上学-丧]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_92.png",
+    "code": "上学-丧"
+  },
+  "[cube_柠檬]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_153.png",
+    "code": "柠檬"
+  },
+  "[cube_马年吉祥]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_172.png",
+    "code": "马年吉祥"
+  },
+  "[cube_洛的点赞]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_176.png",
+    "code": "洛的点赞"
+  },
+  "[cube_咕咕]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_61.png",
+    "code": "咕咕"
+  },
+  "[cube_猛男微笑]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_136.png",
+    "code": "猛男微笑"
+  },
+  "[cube_来财]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_142.png",
+    "code": "来财"
+  },
+  "[cube_喜+1]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_144.png",
+    "code": "喜+1"
+  },
+  "[cube_点赞]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_163.png",
+    "code": "点赞"
+  },
+  "[cube_剑星伊芙]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_133.png",
+    "code": "剑星伊芙"
+  },
+  "[cube_太酷啦]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_125.png",
+    "code": "太酷啦"
+  },
+  "[cube_你懂我]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_75.png",
+    "code": "你懂我"
+  },
+  "[cube_玫瑰]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_156.png",
+    "code": "玫瑰"
+  },
+  "[cube_我懂你]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_76.png",
+    "code": "我懂你"
+  },
+  "[cube_睡觉]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_66.png",
+    "code": "睡觉"
+  },
+  "[cube_爱心]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_155.png",
+    "code": "爱心"
+  },
+  "[cube_我方了]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_143.png",
+    "code": "我方了"
+  },
+  "[cube_毁灭战士]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_131.png",
+    "code": "毁灭战士"
+  },
+  "[cube_剑星渡鸦]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_135.png",
+    "code": "剑星渡鸦"
+  },
+  "[cube_时间旅者]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_141.png",
+    "code": "时间旅者"
+  },
+  "[cube_P的谎言]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_132.png",
+    "code": "P的谎言"
+  },
+  "[cube_盒十]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_164.png",
+    "code": "盒十"
+  },
+  "[cube_山姆无奈]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_175.png",
+    "code": "山姆无奈"
+  },
+  "[cube_2025]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_113.png",
+    "code": "2025"
+  },
+  "[cube_打咩]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_93.png",
+    "code": "打咩"
+  },
+  "[cube_吹口哨]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_123.png",
+    "code": "吹口哨"
+  },
+  "[cube_蛋糕]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_126.png",
+    "code": "蛋糕"
+  },
+  "[cube_2026]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_145.png",
+    "code": "2026"
+  },
+  "[cube_H币]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_52.png",
+    "code": "H币"
+  },
+  "[cube_圣诞树]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_72.png",
+    "code": "圣诞树"
+  },
+  "[cube_+1]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_161.png",
+    "code": "+1"
+  },
+  "[cube_耶]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_165.png",
+    "code": "耶"
+  },
+  "[cube_鼓掌]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_166.png",
+    "code": "鼓掌"
+  },
+  "[cube_红包]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_173.png",
+    "code": "红包"
+  },
+  "[cube_碰拳]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_171.png",
+    "code": "碰拳"
+  },
+  "[cube_-1]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_162.png",
+    "code": "-1"
+  },
+  "[cube_2023]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_71.png",
+    "code": "2023"
+  },
+  "[cube_阳]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_81.png",
+    "code": "阳"
+  },
+  "[cube_2024]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/cube_106.png",
+    "code": "2024"
+  },
+  "[heygirl_喜欢]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_16.png",
+    "code": "喜欢"
+  },
+  "[heygirl_痴]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_15.png",
+    "code": "痴"
+  },
+  "[heygirl_疑问]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_14.png",
+    "code": "疑问"
+  },
+  "[heygirl_白嫖怪]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_13.png",
+    "code": "白嫖怪"
+  },
+  "[heygirl_哭]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_12.png",
+    "code": "哭"
+  },
+  "[heygirl_诶嘿]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_11.png",
+    "code": "诶嘿"
+  },
+  "[heygirl_惊]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_44.png",
+    "code": "惊"
+  },
+  "[heygirl_记下来]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_45.png",
+    "code": "记下来"
+  },
+  "[heygirl_挨刀]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_46.png",
+    "code": "挨刀"
+  },
+  "[heygirl_偷看]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_42.png",
+    "code": "偷看"
+  },
+  "[heygirl_开可乐]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_35.png",
+    "code": "开可乐"
+  },
+  "[heygirl_滑稽]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_41.png",
+    "code": "滑稽"
+  },
+  "[heygirl_哈哈]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_36.png",
+    "code": "哈哈"
+  },
+  "[heygirl_喝奶茶]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_43.png",
+    "code": "喝奶茶"
+  },
+  "[heygirl_敲开心]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_34.png",
+    "code": "敲开心"
+  },
+  "[heygirl_这…]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_33.png",
+    "code": "这…"
+  },
+  "[heygirl_无语]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_32.png",
+    "code": "无语"
+  },
+  "[heygirl_茄化]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_31.png",
+    "code": "茄化"
+  },
+  "[heygirl_吃瓜]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_26.png",
+    "code": "吃瓜"
+  },
+  "[heygirl_rua!]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_25.png",
+    "code": "rua!"
+  },
+  "[heygirl_秃]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_24.png",
+    "code": "秃"
+  },
+  "[heygirl_苦酒入喉]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_23.png",
+    "code": "苦酒入喉"
+  },
+  "[heygirl_害羞]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_22.png",
+    "code": "害羞"
+  },
+  "[heygirl_捏脸]": {
+    "img": "https://imgheybox.max-c.com/heybox/emoji/heygirl_21.png",
+    "code": "捏脸"
+  },
+  "[grandemoji_做个好梦]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/20.png",
+    "code": "做个好梦"
+  },
+  "[grandemoji_呀嘞呀嘞]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/27.png",
+    "code": "呀嘞呀嘞"
+  },
+  "[grandemoji_awsl]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/28.png",
+    "code": "awsl"
+  },
+  "[grandemoji_万能盒娘]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/25.png",
+    "code": "万能盒娘"
+  },
+  "[grandemoji_整挺好]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/31.png",
+    "code": "整挺好"
+  },
+  "[grandemoji_mur化]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/26.png",
+    "code": "mur化"
+  },
+  "[grandemoji_摸不着头脑]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/30.png",
+    "code": "摸不着头脑"
+  },
+  "[grandemoji_盒弹来袭]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/22.png",
+    "code": "盒弹来袭"
+  },
+  "[grandemoji_交个朋友]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/32.png",
+    "code": "交个朋友"
+  },
+  "[grandemoji_我很可爱]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/18.png",
+    "code": "我很可爱"
+  },
+  "[grandemoji_躺平]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/23.png",
+    "code": "躺平"
+  },
+  "[grandemoji_痴]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/17.png",
+    "code": "痴"
+  },
+  "[grandemoji_缩]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/19.png",
+    "code": "缩"
+  },
+  "[grandemoji_啥玩意]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/21.png",
+    "code": "啥玩意"
+  },
+  "[grandemoji_爬]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/24.png",
+    "code": "爬"
+  },
+  "[grandemoji_爬了]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/29.png",
+    "code": "爬了"
+  },
+  "[bigemoji_比心]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/1.png",
+    "code": "比心"
+  },
+  "[bigemoji_暗中观察]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/2.png",
+    "code": "暗中观察"
+  },
+  "[bigemoji_滑稽]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/3.png",
+    "code": "滑稽"
+  },
+  "[bigemoji_？]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/4.png",
+    "code": "？"
+  },
+  "[bigemoji_开可乐]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/16.png",
+    "code": "开可乐"
+  },
+  "[bigemoji_喜加一]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/14.png",
+    "code": "喜加一"
+  },
+  "[bigemoji_哈哈]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/5.png",
+    "code": "哈哈"
+  },
+  "[bigemoji_厉害]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/7.png",
+    "code": "厉害"
+  },
+  "[bigemoji_求带]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/12.png",
+    "code": "求带"
+  },
+  "[bigemoji_羡慕]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/8.png",
+    "code": "羡慕"
+  },
+  "[bigemoji_吃瓜]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/11.png",
+    "code": "吃瓜"
+  },
+  "[bigemoji_打折]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/13.png",
+    "code": "打折"
+  },
+  "[bigemoji_委屈]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/6.png",
+    "code": "委屈"
+  },
+  "[bigemoji_做梦]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/10.png",
+    "code": "做梦"
+  },
+  "[bigemoji_风纪委员]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/15.png",
+    "code": "风纪委员"
+  },
+  "[bigemoji_摔]": {
+    "img": "https://cdn.max-c.com/stickers/heyboxgirl/9.png",
+    "code": "摔"
+  }
+}

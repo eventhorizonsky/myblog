@@ -57,7 +57,7 @@ function nextImg() {
           原文
         </a>
       </div>
-      <h1 class="text-2xl font-bold tracking-tight">{{ article.title }}</h1>
+      <h1 class="text-2xl font-bold tracking-tight" v-html="article.title" />
     </div>
 
     <!-- 画廊模式：图文分开（blocks 类型） -->

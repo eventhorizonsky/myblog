@@ -336,15 +336,20 @@ async function main() {
   const cookie = args.includes("--cookie") ? args[args.indexOf("--cookie") + 1] : (process.env.HEIBOX_COOKIE || "");
   const downloadImages = args.includes("--download-images");
   const gamesOnly = args.includes("--games-only");
-  const userId = config.userId || process.env.HEIBOX_USER_ID || "";
+  // 优先 --user-id → 环境变量 → 从 cookie 提取 user_heybox_id
+  let userId = args.includes("--user-id") ? args[args.indexOf("--user-id") + 1] : process.env.HEIBOX_USER_ID || "";
+  if (!userId && cookie) {
+    const m = cookie.match(/(?:^|;\s*)user_heybox_id=(\d+)/);
+    if (m) userId = m[1];
+  }
 
   if (!userId) {
-    console.error("❌ 请设置 userId (sync-config.json 或 HEIBOX_USER_ID 环境变量)");
+    console.error("❌ 无法获取 userId，请通过 --user-id、HEIBOX_USER_ID 环境变量或包含 user_heybox_id 的 Cookie 提供");
     process.exit(1);
   }
 
   console.log("🔄 小黑盒内容同步");
-  console.log(`  用户ID: ${userId}`);
+  console.log(`  用户ID: ${userId}${cookie && cookie.includes(userId) ? " (从 Cookie 提取)" : ""}`);
   console.log(`  Cookie: ${cookie ? "✅ 已设置" : "⚠ 未设置（将使用摘要而非完整内容）"}`);
   console.log(`  下载图片: ${downloadImages ? "✅" : "❌"}`);
   console.log(`  仅游戏: ${gamesOnly ? "✅" : "❌"}`);
