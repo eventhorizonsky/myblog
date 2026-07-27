@@ -9,7 +9,7 @@ const games = ref<GameReview[]>([]);
 
 async function loadGames() {
   try {
-    const res = await fetch("/content/games/games.json");
+    const res = await fetch(`${import.meta.env.BASE_URL}content/games/games.json`);
     if (res.ok) {
       const data = await res.json();
       games.value = data.games || [];
