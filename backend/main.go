@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"myblog-backend/handlers"
 
@@ -81,12 +82,26 @@ func getDistDir() string {
 	if d := os.Getenv("DIST_DIR"); d != "" {
 		return d
 	}
-	return filepath.Join("..", "frontend", "dist")
+	return resolveLocalPath("frontend", "dist")
 }
 
 func getContentDir() string {
 	if d := os.Getenv("CONTENT_DIR"); d != "" {
 		return d
 	}
-	return filepath.Join("..", "frontend", "content")
+	return resolveLocalPath("frontend", "content")
+}
+
+// resolveLocalPath 相对于二进制所在目录解析路径（兼容 go run 和打包后运行）
+func resolveLocalPath(parts ...string) string {
+	// 优先用二进制路径
+	if exe, err := os.Executable(); err == nil {
+		dir := filepath.Dir(exe)
+		// go run 的二进制在临时目录，需要回退到 CWD
+		if !strings.Contains(dir, os.TempDir()) {
+			return filepath.Join(append([]string{filepath.Dir(dir)}, parts...)...)
+		}
+	}
+	// 回退：相对于当前工作目录
+	return filepath.Join(append([]string{".."}, parts...)...)
 }

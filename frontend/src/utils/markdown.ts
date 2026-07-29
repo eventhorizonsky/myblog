@@ -41,7 +41,8 @@ export function renderMarkdown(content: string): string {
 export async function fetchArticles(): Promise<ArticleMeta[]> {
   const res = await fetch("/api/articles");
   if (!res.ok) throw new Error(`Failed to fetch articles: ${res.status}`);
-  return res.json();
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
 }
 
 /** 获取单篇文章详情（元数据 + 原始 Markdown） */

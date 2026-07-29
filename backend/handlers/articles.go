@@ -100,10 +100,13 @@ func ArticlesListHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	articlesMu.RLock()
-	data, _ := json.Marshal(articlesMeta)
+	meta := articlesMeta
 	articlesMu.RUnlock()
 
-	w.Write(data)
+	if meta == nil {
+		meta = []ArticleMeta{}
+	}
+	json.NewEncoder(w).Encode(meta)
 }
 
 // ArticleDetailHandler 返回单篇文章详情（元数据 + 原始 Markdown）

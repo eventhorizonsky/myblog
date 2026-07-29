@@ -20,6 +20,8 @@ RUN apk add --no-cache ca-certificates tzdata
 ENV TZ=Asia/Shanghai
 COPY --from=backend-builder /server /app/server
 COPY --from=frontend-builder /app/dist /app/dist
+COPY frontend/content/ /app/content/
 ENV DIST_DIR=/app/dist
+ENV CONTENT_DIR=/app/content
 EXPOSE 8080
 CMD ["/app/server"]
