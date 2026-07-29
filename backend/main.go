@@ -24,11 +24,20 @@ func main() {
 		AllowedMethods: []string{"GET", "OPTIONS"},
 	}))
 
+	// 加载文章索引
+	contentDir := getContentDir()
+	if err := handlers.LoadArticles(contentDir); err != nil {
+		log.Printf("[articles] WARNING: failed to load articles: %v", err)
+	}
+
 	// API
 	r.Get("/api/game-stats", handlers.GameStatsHandler)
 	r.Get("/api/anime-collections", handlers.AnimeCollectionsHandler)
 	r.Get("/api/site-config", siteConfigHandler)
 	r.Get("/api/github-projects", handlers.GithubProjectsHandler)
+	r.Get("/api/search", handlers.SearchHandler)
+	r.Get("/api/articles", handlers.ArticlesListHandler)
+	r.Get("/api/articles/*", handlers.ArticleDetailHandler)
 	r.Get("/api/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ok"))
 	})
@@ -73,4 +82,11 @@ func getDistDir() string {
 		return d
 	}
 	return filepath.Join("..", "frontend", "dist")
+}
+
+func getContentDir() string {
+	if d := os.Getenv("CONTENT_DIR"); d != "" {
+		return d
+	}
+	return filepath.Join("..", "frontend", "content")
 }

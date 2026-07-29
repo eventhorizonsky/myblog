@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import { loadAllArticles } from "@/utils/markdown";
-import type { GameReview, AnimeCollection, GitHubRepo } from "@/types";
+import { ref, onMounted } from "vue";
+import { fetchArticles } from "@/utils/markdown";
+import type { ArticleMeta, GameReview, AnimeCollection, GitHubRepo } from "@/types";
 import ArticleCard from "@/components/ArticleCard.vue";
 import GameCard from "@/components/GameCard.vue";
 import AnimeCard from "@/components/AnimeCard.vue";
@@ -16,7 +16,14 @@ const siteConfig = inject<Ref<SiteConfig>>("siteConfig");
 const siteTitle = siteConfig?.value?.title || "EventHorizon Blog";
 
 // 文章
-const articles = computed(() => loadAllArticles().slice(0, 4));
+const articles = ref<ArticleMeta[]>([]);
+
+async function loadArticles() {
+  try {
+    const data = await fetchArticles();
+    articles.value = data.slice(0, 4);
+  } catch { /* ignore */ }
+}
 
 // 游戏评测
 const games = ref<GameReview[]>([]);
@@ -59,7 +66,7 @@ async function loadAnime() {
   finally { animeLoading.value = false }
 }
 
-onMounted(() => { loadGames(); loadAnime(); loadProjects(); });
+onMounted(() => { loadArticles(); loadGames(); loadAnime(); loadProjects(); });
 </script>
 
 <template>
