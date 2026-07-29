@@ -125,6 +125,8 @@ images:
 | `ICP_BEIAN` | ❌ | — | ICP 备案号，显示在页面底部 |
 | `PORT` | ❌ | `8080` | 后端监听端口 |
 | `DIST_DIR` | ❌ | `../frontend/dist` | 前端构建产物目录 |
+| `GITHUB_USERNAME` | ✅ | — | GitHub 用户名，用于展示置顶项目 |
+| `GITHUB_TOKEN` | ❌ | — | GitHub Personal Access Token，提升 API 限额至 5000/h（未认证仅 60/h） |
 
 ### 同步脚本
 
@@ -164,6 +166,7 @@ npm run dev
 | `GET /api/anime-collections` | Bangumi 追番收藏，支持 `?type=&limit=&offset=` 分页筛选 |
 | `GET /api/site-config` | 站点配置（标题、备案号） |
 | `GET /api/health` | 健康检查 |
+| `GET /api/github-projects` | GitHub 置顶仓库（24h 缓存，需 `GITHUB_USERNAME` 环境变量） |
 
 ## 部署
 

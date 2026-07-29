@@ -24,6 +24,10 @@ const router = createRouter({
       path: "/anime",
       component: () => import("@/pages/AnimePage.vue"),
     },
+    {
+      path: "/projects",
+      component: () => import("@/pages/ProjectsPage.vue"),
+    },
   ],
 });
 

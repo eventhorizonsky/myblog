@@ -66,6 +66,18 @@ export interface AnimeCollection {
   private: boolean;
 }
 
+export interface GitHubRepo {
+  name: string;
+  description: string;
+  url: string;
+  language: string;
+  language_color: string;
+  stars: number;
+  forks: number;
+  homepage_url: string;
+  og_image: string;
+}
+
 export const CATEGORY_CONFIG: Record<string, { label: string; color: string }> = {
   all: { label: "全部", color: "" },
   review: { label: "图文评测", color: "bg-amber-50 text-amber-700 border-amber-200" },

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { loadAllArticles } from "@/utils/markdown";
-import type { GameReview, AnimeCollection } from "@/types";
+import type { GameReview, AnimeCollection, GitHubRepo } from "@/types";
 import ArticleCard from "@/components/ArticleCard.vue";
 import GameCard from "@/components/GameCard.vue";
 import AnimeCard from "@/components/AnimeCard.vue";
-import { FileText, Gamepad2, Tv, ArrowRight, Loader2 } from "lucide-vue-next";
+import ProjectCard from "@/components/ProjectCard.vue";
+import { FileText, Gamepad2, Tv, ArrowRight, Loader2, FolderGit2 } from "lucide-vue-next";
 import { useRouter } from "vue-router";
 import { inject, type Ref } from "vue";
 import type { SiteConfig } from "@/App.vue";
@@ -29,6 +30,21 @@ async function loadGames() {
 // 在追番剧 (type=2)
 const watching = ref<AnimeCollection[]>([]);
 const animeLoading = ref(false);
+
+// GitHub 置顶项目（按 star 数取前 3）
+const topProjects = ref<GitHubRepo[]>([]);
+
+async function loadProjects() {
+  try {
+    const res = await fetch("/api/github-projects");
+    if (res.ok) {
+      const data: GitHubRepo[] = await res.json();
+      topProjects.value = data
+        .sort((a, b) => b.stars - a.stars)
+        .slice(0, 3);
+    }
+  } catch { /* ignore */ }
+}
 async function loadAnime() {
   animeLoading.value = true;
   try {
@@ -43,7 +59,7 @@ async function loadAnime() {
   finally { animeLoading.value = false }
 }
 
-onMounted(() => { loadGames(); loadAnime(); });
+onMounted(() => { loadGames(); loadAnime(); loadProjects(); });
 </script>
 
 <template>
@@ -74,6 +90,22 @@ onMounted(() => { loadGames(); loadAnime(); });
       </div>
       <div v-else class="text-center py-8 text-muted-foreground text-sm">
         还没有文章
+      </div>
+    </section>
+
+    <!-- ====== GitHub 精选项目 ====== -->
+    <section v-if="topProjects.length > 0">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold flex items-center gap-2">
+          <FolderGit2 class="h-5 w-5 text-primary" />
+          精选项目
+        </h2>
+        <router-link to="/projects" class="text-sm text-primary hover:underline flex items-center gap-1">
+          全部 <ArrowRight class="h-3 w-3" />
+        </router-link>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <ProjectCard v-for="repo in topProjects" :key="repo.name" :repo="repo" />
       </div>
     </section>
 

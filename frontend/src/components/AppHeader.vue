@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { ref, inject } from "vue";
+import { ref, inject, computed } from "vue";
 import { useRoute } from "vue-router";
 import { cn } from "@/utils/cn";
-import { Home, FileText, Gamepad2, Tv, Sun, Moon } from "lucide-vue-next";
+import { Home, FileText, Gamepad2, Tv, Sun, Moon, FolderGit2 } from "lucide-vue-next";
 import type { SiteConfig } from "@/App.vue";
 import type { Ref } from "vue";
 
 const route = useRoute();
 const isDark = ref(false);
 const siteConfig = inject<Ref<SiteConfig>>("siteConfig");
-const siteTitle = siteConfig?.value?.title || "EventHorizon Blog";
+const siteTitle = computed(() => siteConfig?.value?.title || "EventHorizon Blog");
 
 function toggleDark() {
   isDark.value = !isDark.value;
@@ -19,6 +19,7 @@ function toggleDark() {
 const navItems = [
   { href: "/", label: "首页", icon: Home },
   { href: "/articles", label: "文章", icon: FileText },
+  { href: "/projects", label: "项目", icon: FolderGit2 },
   { href: "/games", label: "游戏", icon: Gamepad2 },
   { href: "/anime", label: "动漫", icon: Tv },
 ];

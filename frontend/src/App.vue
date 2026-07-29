@@ -13,7 +13,11 @@ provide("siteConfig", siteConfig);
 onMounted(async () => {
   try {
     const res = await fetch("/api/site-config");
-    if (res.ok) siteConfig.value = await res.json();
+    if (res.ok) {
+      const config = await res.json();
+      siteConfig.value = config;
+      document.title = config.title || "EventHorizon Blog";
+    }
   } catch { /* use default */ }
 });
 </script>

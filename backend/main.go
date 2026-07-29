@@ -28,6 +28,7 @@ func main() {
 	r.Get("/api/game-stats", handlers.GameStatsHandler)
 	r.Get("/api/anime-collections", handlers.AnimeCollectionsHandler)
 	r.Get("/api/site-config", siteConfigHandler)
+	r.Get("/api/github-projects", handlers.GithubProjectsHandler)
 	r.Get("/api/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ok"))
 	})
