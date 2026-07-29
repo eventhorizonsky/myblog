@@ -118,7 +118,7 @@ watch(activeTab, () => { loadTab(); });
       </div>
 
       <!-- 卡片网格 -->
-      <div v-if="items.length > 0" class="columns-1 sm:columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6 gap-4 space-y-4">
+      <div v-if="items.length > 0" class="columns-2 md:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6 gap-4 space-y-4">
         <AnimeCard v-for="item in items" :key="item.subject_id" :item="item" />
       </div>
 
