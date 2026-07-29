@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -25,6 +26,8 @@ func main() {
 
 	// API
 	r.Get("/api/game-stats", handlers.GameStatsHandler)
+	r.Get("/api/anime-collections", handlers.AnimeCollectionsHandler)
+	r.Get("/api/site-config", siteConfigHandler)
 	r.Get("/api/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ok"))
 	})
@@ -45,6 +48,23 @@ func main() {
 	}
 	log.Printf("Server starting on :%s (dist: %s)", port, distDir)
 	log.Fatal(http.ListenAndServe(":"+port, r))
+}
+
+type siteConfig struct {
+	Title    string `json:"title"`
+	IcpBeian string `json:"icp_beian,omitempty"`
+}
+
+func siteConfigHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	title := os.Getenv("SITE_TITLE")
+	if title == "" {
+		title = "EventHorizon Blog"
+	}
+	json.NewEncoder(w).Encode(siteConfig{
+		Title:    title,
+		IcpBeian: os.Getenv("ICP_BEIAN"),
+	})
 }
 
 func getDistDir() string {

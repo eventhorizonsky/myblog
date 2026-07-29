@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, inject } from "vue";
 import { useRoute } from "vue-router";
 import { cn } from "@/utils/cn";
 import { Home, FileText, Gamepad2, Tv, Sun, Moon } from "lucide-vue-next";
+import type { SiteConfig } from "@/App.vue";
+import type { Ref } from "vue";
 
 const route = useRoute();
 const isDark = ref(false);
+const siteConfig = inject<Ref<SiteConfig>>("siteConfig");
+const siteTitle = siteConfig?.value?.title || "EventHorizon Blog";
 
 function toggleDark() {
   isDark.value = !isDark.value;
@@ -24,15 +28,13 @@ const navItems = [
   <header class="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6">
       <div class="flex items-center justify-between h-14">
-        <!-- Logo -->
         <router-link to="/" class="flex items-center gap-2 font-bold">
           <Gamepad2 class="h-5 w-5 text-primary" />
           <span class="hidden sm:inline bg-gradient-to-r from-primary to-blue-500 bg-clip-text text-transparent">
-            EventHorizon
+            {{ siteTitle }}
           </span>
         </router-link>
 
-        <!-- Nav Links -->
         <nav class="flex items-center gap-1">
           <router-link
             v-for="item in navItems"
@@ -52,7 +54,6 @@ const navItems = [
           </router-link>
         </nav>
 
-        <!-- Dark mode toggle -->
         <button
           @click="toggleDark()"
           class="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"

@@ -113,20 +113,42 @@ images:
 
 ## 环境变量
 
+### 后端
+
+| 变量 | 必需 | 默认值 | 说明 |
+|------|------|--------|------|
+| `HEIBOX_USER_ID` | ✅ | — | 小黑盒用户 ID，用于游戏战绩接口 |
+| `HEIBOX_OS_VERSION` | ❌ | `12` | 小黑盒 API 的 os_version 参数 |
+| `BANGUMI_API_URL` | ❌ | `https://api.bgm.tv` | Bangumi 镜像 API 地址 |
+| `BANGUMI_USERNAME` | ✅ | — | Bangumi 用户名，用于拉取追番收藏 |
+| `SITE_TITLE` | ❌ | `EventHorizon Blog` | 博客名称，显示在左上角和首页 |
+| `ICP_BEIAN` | ❌ | — | ICP 备案号，显示在页面底部 |
+| `PORT` | ❌ | `8080` | 后端监听端口 |
+| `DIST_DIR` | ❌ | `../frontend/dist` | 前端构建产物目录 |
+
+### 同步脚本
+
 | 变量 | 必需 | 说明 |
 |------|------|------|
-| `HEIBOX_COOKIE` | 同步 | PC Web Cookie，拉取完整文章内容 |
-| `HEIBOX_MOBILE_COOKIE` | 后端 | 手机端 Cookie，获取游戏战绩数据 |
-| `HEIBOX_USER_ID` | 可选 | 小黑盒用户 ID（Cookie 中可自动提取） |
-| `HEIBOX_OS_VERSION` | 可选 | 手机 API 的 os_version 参数（默认 12） |
+| `HEIBOX_COOKIE` | 同步 | PC Web Cookie（`--cookie` 参数传入），拉取完整文章内容 |
+| `HEIBOX_USER_ID` | 可选 | 小黑盒用户 ID（可从 Cookie 中 `user_heybox_id` 字段自动提取） |
+
+### 已废弃
+
+| 变量 | 说明 |
+|------|------|
+| `HEIBOX_MOBILE_COOKIE` | 不再需要，已切换至免 Cookie 的 `heybox_home_v2` 接口 |
 
 ### 本地开发
 
 ```bash
 # Go 后端
 cd backend
-export HEIBOX_MOBILE_COOKIE="pkey=xxx;x_xhh_tokenid=xxx"
-export GOPROXY="https://goproxy.cn,direct"
+export HEIBOX_USER_ID=111111
+export BANGUMI_USERNAME=ezsky
+export BANGUMI_API_URL=https://api.bgm.tv
+export SITE_TITLE="EventHorizon"
+export ICP_BEIAN="ICP备XXXXXXXX号-1"  # 可选
 go run .
 
 # 前端（dev 模式自动代理 /api → localhost:8080）
@@ -138,7 +160,9 @@ npm run dev
 
 | 端点 | 说明 |
 |------|------|
-| `GET /api/game-stats` | 游戏战绩卡片（24h 缓存，失败返回旧数据） |
+| `GET /api/game-stats` | 游戏战绩 + Steam 信息 + 硬件配置（24h 缓存） |
+| `GET /api/anime-collections` | Bangumi 追番收藏，支持 `?type=&limit=&offset=` 分页筛选 |
+| `GET /api/site-config` | 站点配置（标题、备案号） |
 | `GET /api/health` | 健康检查 |
 
 ## 部署

@@ -153,7 +153,7 @@ function buildUrl(path: string, extraParams: Record<string, string>): string {
   return `https://api.xiaoheihe.cn${path}?${new URLSearchParams(merged)}`;
 }
 
-async function fetchMoments(userId: string, cookie: string): Promise<MomentItem[]> {
+async function fetchMoments(userId: string, cookie: string, syncedSet: Set<number>): Promise<MomentItem[]> {
   const allMoments: MomentItem[] = [];
   let lastval = "";
   let page = 0;
@@ -173,7 +173,15 @@ async function fetchMoments(userId: string, cookie: string): Promise<MomentItem[
 
     const moments: MomentItem[] = (data.result?.moments || []).filter((m: MomentItem) => m.linkid);
     allMoments.push(...moments);
-    console.error(`  第 ${page} 页: ${moments.length} 条 (累计 ${allMoments.length})`);
+
+    const newCount = moments.filter(m => !syncedSet.has(m.linkid)).length;
+    console.error(`  第 ${page} 页: ${moments.length} 条 (新增 ${newCount}, 累计 ${allMoments.length})`);
+
+    // 整页都是已同步的旧数据 → 后续页也不会再有新内容，提前终止
+    if (moments.length > 0 && newCount === 0) {
+      console.error(`  ⏹ 本页无新内容，停止分页`);
+      break;
+    }
 
     lastval = data.result?.lastval || "";
     if (!lastval || moments.length === 0) break;
@@ -225,6 +233,16 @@ async function processTextMoment(
   const catDir = path.join(OUTPUT_DIR, "articles", category);
   fs.mkdirSync(catDir, { recursive: true });
 
+  const date = new Date((m.modify_at || m.create_at || 0) * 1000).toISOString().split("T")[0];
+  const slug = `${date}-${slugify(m.title || "untitled")}`;
+  const outputPath = path.join(catDir, `${slug}.md`);
+
+  // 文件已存在则跳过（不重复拉取完整内容）
+  if (fs.existsSync(outputPath)) {
+    console.error(`    ⏭ 跳过 (已存在)`);
+    return;
+  }
+
   // Get full content
   let raw = m.description || "";
   let parsed: { type: string; body: string; images: string[] } = { type: "text", body: raw, images: [] };
@@ -242,8 +260,6 @@ async function processTextMoment(
   } else {
   }
 
-  const date = new Date((m.modify_at || m.create_at || 0) * 1000).toISOString().split("T")[0];
-  const slug = `${date}-${slugify(m.title || "untitled")}`;
   const cover = parsed.images.length > 0 ? `cover: "${parsed.images[0]}"` : "";
   const imagesYaml = parsed.images.length > 0
     ? `\nimages:\n${parsed.images.map(u => `  - "${u}"`).join("\n")}`
@@ -264,7 +280,7 @@ async function processTextMoment(
     "",
   ].join("\n");
 
-  fs.writeFileSync(path.join(catDir, `${slug}.md`), frontmatter + parsed.body, "utf-8");
+  fs.writeFileSync(outputPath, frontmatter + parsed.body, "utf-8");
 
   // Download images
   if (downloadImages && m.imgs?.length) {
@@ -363,7 +379,7 @@ async function main() {
 
   // 2. Fetch all moments
   console.log("\n📥 拉取动态列表...");
-  const moments = await fetchMoments(userId, cookie);
+  const moments = await fetchMoments(userId, cookie, syncedSet);
   const newMoments = moments.filter(m => !syncedSet.has(m.linkid));
   console.log(`  总计: ${moments.length} 条, 新增: ${newMoments.length} 条\n`);
 

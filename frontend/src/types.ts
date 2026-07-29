@@ -22,6 +22,50 @@ export interface GameReview {
   score?: number;
 }
 
+export interface BangumiSubjectImage {
+  small: string;
+  grid: string;
+  large: string;
+  medium: string;
+  common: string;
+}
+
+export interface BangumiTag {
+  name: string;
+  count: number;
+  total_count: number;
+}
+
+export interface BangumiSubject {
+  date: string;
+  images: BangumiSubjectImage;
+  name: string;
+  name_cn: string;
+  short_summary: string;
+  tags: BangumiTag[];
+  score: number;
+  type: number;
+  id: number;
+  eps: number;
+  volumes: number;
+  collection_total: number;
+  rank: number;
+}
+
+export interface AnimeCollection {
+  updated_at: string;
+  comment: string | null;
+  tags: string[];
+  subject: BangumiSubject;
+  subject_id: number;
+  vol_status: number;
+  ep_status: number;
+  subject_type: number;
+  type: number;
+  rate: number;
+  private: boolean;
+}
+
 export const CATEGORY_CONFIG: Record<string, { label: string; color: string }> = {
   all: { label: "全部", color: "" },
   review: { label: "图文评测", color: "bg-amber-50 text-amber-700 border-amber-200" },

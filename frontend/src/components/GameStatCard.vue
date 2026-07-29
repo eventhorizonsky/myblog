@@ -27,7 +27,7 @@ const statPairs = (c: GameStatCard) => [
 <template>
   <Card class="overflow-hidden hover:shadow-md transition-shadow">
     <!-- 背景横幅 -->
-    <div class="relative w-full h-32 overflow-hidden">
+    <div class="relative w-full overflow-hidden" style="aspect-ratio: 1101/306">
       <img
         :src="card.bg_image"
         class="absolute inset-0 w-full h-full object-cover"
