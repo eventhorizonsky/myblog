@@ -30,10 +30,17 @@ function onImageError() {
   imageError.value = true;
   imageLoaded.value = true; // hide skeleton, show fallback
 }
+
+function openBangumi() {
+  window.open(`https://bgm.tv/subject/${props.item.subject_id}`, "_blank", "noopener");
+}
 </script>
 
 <template>
-  <Card class="overflow-hidden hover:shadow-md transition-shadow break-inside-avoid">
+  <Card
+    class="overflow-hidden hover:shadow-md transition-shadow break-inside-avoid cursor-pointer"
+    @click="openBangumi"
+  >
     <!-- 封面区域 -->
     <div v-if="cover && !imageError" class="relative w-full overflow-hidden bg-muted" style="aspect-ratio: 2/3">
       <!-- Skeleton -->
