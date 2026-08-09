@@ -7,6 +7,8 @@ import Card from "@/components/ui/Card.vue";
 import Badge from "@/components/ui/Badge.vue";
 import { CATEGORY_CONFIG } from "@/types";
 import { ArrowLeft, ExternalLink, Calendar, ChevronLeft, ChevronRight, Loader2, AlertCircle } from "lucide-vue-next";
+import GiscusComments from "@/components/GiscusComments.vue";
+import { GISCUS_CONFIG } from "@/config/giscus";
 
 const props = defineProps<{ id: string }>();
 const router = useRouter();
@@ -165,6 +167,9 @@ function nextImg() {
           />
         </div>
       </Card>
+
+      <!-- GitHub Discussions 评论 -->
+      <GiscusComments :config="GISCUS_CONFIG" :article-id="meta.id" />
     </template>
   </div>
 </template>
