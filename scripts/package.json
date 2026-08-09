@@ -3,9 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "sync": "npx tsx sync-heihe.ts"
+    "sync": "npx tsx sync-heihe.ts",
+    "backup-images": "npx tsx backup-images.ts"
   },
   "devDependencies": {
+    "@types/node": "^26.2.0",
     "tsx": "^4.19.0",
     "typescript": "~5.6.0"
   }

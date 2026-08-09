@@ -1,5 +1,6 @@
 {
   "outputDir": "../frontend/content",
   "imagesDir": "../frontend/public/content-images",
-  "docDir": "../frontend/doc"
+  "docDir": "../frontend/doc",
+  "imageBackupDir": "../frontend/content-images"
 }

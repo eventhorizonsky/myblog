@@ -1,8 +1,11 @@
 /**
  * 小黑盒内容同步脚本
- * 用法: npx tsx sync-heihe.ts [--cookie "COOKIE"] [--download-images]
+ * 用法: npx tsx sync-heihe.ts [--cookie "COOKIE"] [--no-images]
+ * 默认会下载图片备份到 imageBackupDir（本地路径与 URL 路径一致），不修改 markdown 内的 img url；
+ * 传入 --no-images 可关闭图片备份。
  */
 import { createSignedParams, getBaseApiParams } from "./heibox-signing";
+import { imageUrlToLocalRelPath } from "./image-utils";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,6 +22,7 @@ const config = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf-8"));
 const OUTPUT_DIR = path.resolve(__dirname, config.outputDir || "../frontend/content");
 const IMAGES_DIR = path.resolve(__dirname, config.imagesDir || "../frontend/public/content-images");
 const DOC_DIR = path.resolve(__dirname, config.docDir || "../frontend/doc");
+const IMAGE_BACKUP_DIR = path.resolve(__dirname, config.imageBackupDir || "../frontend/content-images");
 
 const HEIBOX_HEADERS: Record<string, string> = {
   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/150.0.0.0 Safari/537.36",
@@ -370,14 +374,17 @@ async function processTextMoment(
 
   fs.writeFileSync(outputPath, frontmatter + parsed.body, "utf-8");
 
-  // Download images
-  if (downloadImages && m.imgs?.length) {
-    const imgDir = path.join(IMAGES_DIR, "articles", String(m.linkid));
-    for (const imgUrl of m.imgs) {
-      const origUrl = toOriginalImageUrl(imgUrl);
-      const filename = origUrl.split("/").pop()?.split("?")[0] || "image.jpg";
-      const ok = await downloadImage(origUrl, path.join(imgDir, filename));
-      console.error(`    📷 ${ok ? '✅' : '❌'} ${filename}`);
+  // Download images (backup only, 不修改 markdown 内的 img url)
+  if (downloadImages) {
+    const urls = new Set<string>();
+    if (cover) urls.add(cover);
+    for (const imgUrl of parsed.images) urls.add(imgUrl);
+    for (const imgUrl of m.imgs || []) urls.add(toOriginalImageUrl(imgUrl));
+    for (const url of urls) {
+      const rel = imageUrlToLocalRelPath(url);
+      if (!rel) continue;
+      const ok = await downloadImage(url, path.join(IMAGE_BACKUP_DIR, rel));
+      console.error(`    📷 ${ok ? '✅' : '❌'} ${rel}`);
     }
   }
 }
@@ -439,7 +446,8 @@ async function processGameMoment(
 async function main() {
   const args = process.argv.slice(2);
   const cookie = args.includes("--cookie") ? args[args.indexOf("--cookie") + 1] : (process.env.HEIBOX_COOKIE || "");
-  const downloadImages = args.includes("--download-images");
+  const noImages = args.includes("--no-images");
+  const downloadImages = !noImages;
   const gamesOnly = args.includes("--games-only");
   const force = args.includes("--force");
   // 优先 --user-id → 环境变量 → 从 cookie 提取 user_heybox_id
@@ -457,7 +465,7 @@ async function main() {
   console.log("🔄 小黑盒内容同步");
   console.log(`  用户ID: ${userId}${cookie && cookie.includes(userId) ? " (从 Cookie 提取)" : ""}`);
   console.log(`  Cookie: ${cookie ? "✅ 已设置" : "⚠ 未设置（将使用摘要而非完整内容）"}`);
-  console.log(`  下载图片: ${downloadImages ? "✅" : "❌"}`);
+  console.log(`  下载图片备份: ${downloadImages ? "✅ (默认, --no-images 关闭)" : "❌"}`);
   console.log(`  全量重同步: ${force ? "✅" : "❌"}`);
   console.log(`  仅游戏: ${gamesOnly ? "✅" : "❌"}`);
   console.log(`  输出目录: ${OUTPUT_DIR}`);
