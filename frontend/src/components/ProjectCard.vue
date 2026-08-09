@@ -21,7 +21,7 @@ const imgError = ref(false);
       <img
         :src="repo.og_image"
         :alt="repo.name"
-        class="w-full h-full object-cover"
+        class="w-full h-full object-cover dark:brightness-75 dark:saturate-75 transition-[filter]"
         loading="lazy"
         @error="imgError = true"
       />
