@@ -1,7 +1,7 @@
 ---
 title: "【HXD们我的平板得救了】SURFACE PRO3触摸失灵但笔触可用时的解决方案"
 date: 2022-02-20
-category: review
+category: no-tech
 type: html
 linkid: 77500560
 link_tag: 11

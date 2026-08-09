@@ -1,7 +1,7 @@
 ---
 title: "【教程向】利用calibre-web搭建私人书库"
 date: 2020-12-15
-category: review
+category: no-tech
 type: html
 linkid: 50245602
 link_tag: 11

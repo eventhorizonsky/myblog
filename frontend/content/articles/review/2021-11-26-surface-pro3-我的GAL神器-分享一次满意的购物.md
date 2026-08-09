@@ -1,7 +1,7 @@
 ---
 title: "【surface pro3】我的GAL神器——分享一次满意的购物"
 date: 2021-11-26
-category: review
+category: no-tech
 type: html
 linkid: 73338936
 link_tag: 11

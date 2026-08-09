@@ -99,11 +99,29 @@ func resolveLocalPath(parts ...string) string {
 	// 优先用二进制路径
 	if exe, err := os.Executable(); err == nil {
 		dir := filepath.Dir(exe)
-		// go run 的二进制在临时目录，需要回退到 CWD
-		if !strings.Contains(dir, os.TempDir()) {
-			return filepath.Join(append([]string{filepath.Dir(dir)}, parts...)...)
+		// go run 的二进制位于 Temp 或 GOCACHE(go-build) 缓存目录，需要回退到 CWD
+		if isGoRunCache(dir) {
+			return filepath.Join(append([]string{".."}, parts...)...)
 		}
+		// 打包后的二进制放在 backend/ 下，其父目录即项目根
+		return filepath.Join(append([]string{filepath.Dir(dir)}, parts...)...)
 	}
 	// 回退：相对于当前工作目录
 	return filepath.Join(append([]string{".."}, parts...)...)
+}
+
+// isGoRunCache 判断二进制是否位于 go run 的临时/缓存目录
+func isGoRunCache(dir string) bool {
+	candidates := []string{os.TempDir()}
+	if gc := os.Getenv("GOCACHE"); gc != "" {
+		candidates = append(candidates, gc)
+	} else if home, err := os.UserHomeDir(); err == nil {
+		candidates = append(candidates, filepath.Join(home, "AppData", "Local", "go-build"))
+	}
+	for _, c := range candidates {
+		if c != "" && strings.Contains(dir, c) {
+			return true
+		}
+	}
+	return false
 }

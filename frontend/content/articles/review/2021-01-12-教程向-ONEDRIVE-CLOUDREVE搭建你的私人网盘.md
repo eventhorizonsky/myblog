@@ -1,7 +1,7 @@
 ---
 title: "【教程向】ONEDRIVE+CLOUDREVE搭建你的私人网盘"
 date: 2021-01-12
-category: review
+category: no-tech
 type: html
 linkid: 51771718
 link_tag: 11

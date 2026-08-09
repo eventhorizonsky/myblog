@@ -7,7 +7,7 @@ import Badge from "@/components/ui/Badge.vue";
 import { Calendar } from "lucide-vue-next";
 
 const props = defineProps<{ article: ArticleMeta }>();
-const catConfig = CATEGORY_CONFIG[props.article.category] || CATEGORY_CONFIG.general;
+const catConfig = CATEGORY_CONFIG[props.article.category] || { label: props.article.category || "文章", color: "" };
 
 // 基于标题字符串选一个渐变
 const gradients = [

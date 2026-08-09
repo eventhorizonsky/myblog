@@ -1,7 +1,7 @@
 ---
 title: "【教程向】cloudreve+oss搭建你的私人网盘"
 date: 2020-12-23
-category: review
+category: no-tech
 type: html
 linkid: 50157789
 link_tag: 11

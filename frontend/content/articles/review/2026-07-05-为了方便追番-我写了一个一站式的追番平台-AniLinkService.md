@@ -1,7 +1,7 @@
 ---
 title: "为了方便追番，我写了一个一站式的追番平台——AniLinkService"
 date: 2026-07-05
-category: review
+category: no-tech
 type: html
 linkid: 179137974
 link_tag: 11

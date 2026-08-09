@@ -1,7 +1,7 @@
 ---
 title: 欢迎来到 EventHorizon Blog
 date: 2026-07-27
-category: general
+category: community
 ---
 
 ## 欢迎
