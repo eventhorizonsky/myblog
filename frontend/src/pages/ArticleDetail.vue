@@ -5,6 +5,7 @@ import { fetchArticle, renderMarkdown } from "@/utils/markdown";
 import type { ArticleMeta } from "@/types";
 import Card from "@/components/ui/Card.vue";
 import Badge from "@/components/ui/Badge.vue";
+import Lightbox, { type LightboxImage } from "@/components/ui/Lightbox.vue";
 import { CATEGORY_CONFIG } from "@/types";
 import { ArrowLeft, ExternalLink, Calendar, ChevronLeft, ChevronRight, Loader2, AlertCircle } from "lucide-vue-next";
 import GiscusComments from "@/components/GiscusComments.vue";
@@ -46,6 +47,47 @@ function prevImg() {
 }
 function nextImg() {
   currentImg.value = (currentImg.value + 1) % galleryImages.value.length;
+}
+
+// 灯箱
+const lightboxOpen = ref(false);
+const lightboxImages = ref<LightboxImage[]>([]);
+const lightboxIndex = ref(0);
+
+function openLightbox(images: LightboxImage[], index: number) {
+  lightboxImages.value = images;
+  lightboxIndex.value = index;
+  lightboxOpen.value = true;
+}
+
+function openGalleryLightbox(index: number) {
+  currentImg.value = index;
+  openLightbox(galleryImages.value.map((src) => ({ src })), index);
+}
+
+const articleRef = ref<HTMLElement | null>(null);
+
+// 收集正文中的图片（排除 emoji 图标）
+function collectContentImages(): LightboxImage[] {
+  const el = articleRef.value;
+  if (!el) return [];
+  return Array.from(el.querySelectorAll<HTMLImageElement>("img"))
+    .filter((img) => !img.classList.contains("emoji-inline"))
+    .map((img) => ({ src: img.currentSrc || img.src, alt: img.alt || "" }));
+}
+
+function openContentLightbox(target: HTMLImageElement) {
+  const images = collectContentImages();
+  const index = images.findIndex((im) => im.src === (target.currentSrc || target.src));
+  if (index >= 0) openLightbox(images, index);
+}
+
+function onArticleClick(e: MouseEvent) {
+  const target = e.target as HTMLElement;
+  if (target.tagName !== "IMG" || target.classList.contains("emoji-inline")) return;
+  // 图片被链接包裹时保留链接行为
+  if (target.closest("a")) return;
+  openContentLightbox(target as HTMLImageElement);
 }
 </script>
 
@@ -105,21 +147,22 @@ function nextImg() {
           <div class="relative bg-muted/50">
             <img
               :src="galleryImages[currentImg]"
-              class="w-full max-h-[70vh] object-contain mx-auto"
+              class="w-full max-h-[70vh] object-contain mx-auto cursor-zoom-in"
               loading="lazy"
               decoding="async"
               style="min-height: 300px"
+              @click="openGalleryLightbox(currentImg)"
             />
             <button
               v-if="galleryImages.length > 1"
-              @click="prevImg"
+              @click.stop="prevImg"
               class="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/80 hover:bg-background shadow transition-colors"
             >
               <ChevronLeft class="h-5 w-5" />
             </button>
             <button
               v-if="galleryImages.length > 1"
-              @click="nextImg"
+              @click.stop="nextImg"
               class="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/80 hover:bg-background shadow transition-colors"
             >
               <ChevronRight class="h-5 w-5" />
@@ -132,7 +175,7 @@ function nextImg() {
             <div
               v-for="(img, i) in galleryImages"
               :key="i"
-              @click="currentImg = i"
+              @click="openGalleryLightbox(i)"
               :class="[
                 'h-14 w-14 shrink-0 rounded cursor-pointer overflow-hidden border-2 transition-colors',
                 i === currentImg ? 'border-primary' : 'border-transparent hover:border-border',
@@ -146,11 +189,13 @@ function nextImg() {
         <Card v-if="html">
           <div class="p-6 sm:p-8">
             <article
+              ref="articleRef"
               class="prose prose-neutral dark:prose-invert max-w-none
                 prose-headings:font-semibold prose-a:text-primary
                 prose-img:rounded-lg prose-pre:bg-muted prose-code:text-sm
                 [&_br]:block [&_br]:content-[''] [&_br]:mt-3"
               v-html="html"
+              @click="onArticleClick"
             />
           </div>
         </Card>
@@ -160,7 +205,7 @@ function nextImg() {
       <template v-else>
         <div
           v-if="meta.cover"
-          class="relative w-full overflow-hidden rounded-xl border bg-muted mb-6"
+          class="relative w-full overflow-hidden rounded-xl border bg-muted mb-6 cursor-zoom-in"
           style="aspect-ratio: 16/9"
         >
           <img
@@ -170,16 +215,20 @@ function nextImg() {
             loading="lazy"
             decoding="async"
             @error="($event.target as HTMLImageElement).style.display = 'none'"
+            @click="openLightbox([{ src: meta.cover as string, alt: meta.title }], 0)"
           />
         </div>
 
         <Card>
           <div class="p-6 sm:p-8">
             <article
+              ref="articleRef"
               class="prose prose-neutral dark:prose-invert max-w-none
                 prose-headings:font-semibold prose-a:text-primary
-                prose-img:rounded-lg prose-pre:bg-muted prose-code:text-sm"
+                prose-img:rounded-lg prose-pre:bg-muted prose-code:text-sm
+                prose-img:cursor-zoom-in"
               v-html="html"
+              @click="onArticleClick"
             />
           </div>
         </Card>
@@ -188,5 +237,12 @@ function nextImg() {
       <!-- GitHub Discussions 评论 -->
       <GiscusComments :config="GISCUS_CONFIG" :article-id="meta.id" />
     </template>
+
+    <Lightbox
+      :open="lightboxOpen"
+      :images="lightboxImages"
+      :initial-index="lightboxIndex"
+      @close="lightboxOpen = false"
+    />
   </div>
 </template>
