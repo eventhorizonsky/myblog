@@ -31,7 +31,7 @@ const imgError = ref(false);
     <div
       v-else
       class="flex items-center justify-center bg-muted"
-      style="aspect-ratio: 1200/630; max-height: 120px;"
+      style="aspect-ratio: 1200/630"
     >
       <Github class="h-8 w-8 text-muted-foreground/30" />
     </div>
