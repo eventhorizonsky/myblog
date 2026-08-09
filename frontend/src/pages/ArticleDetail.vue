@@ -156,17 +156,34 @@ function nextImg() {
         </Card>
       </div>
 
-      <!-- 普通模式 -->
-      <Card v-else>
-        <div class="p-6 sm:p-8">
-          <article
-            class="prose prose-neutral dark:prose-invert max-w-none
-              prose-headings:font-semibold prose-a:text-primary
-              prose-img:rounded-lg prose-pre:bg-muted prose-code:text-sm"
-            v-html="html"
+      <!-- 普通模式：顶部封面区 -->
+      <template v-else>
+        <div
+          v-if="meta.cover"
+          class="relative w-full overflow-hidden rounded-xl border bg-muted mb-6"
+          style="aspect-ratio: 16/9"
+        >
+          <img
+            :src="meta.cover"
+            :alt="meta.title"
+            class="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
+            @error="($event.target as HTMLImageElement).style.display = 'none'"
           />
         </div>
-      </Card>
+
+        <Card>
+          <div class="p-6 sm:p-8">
+            <article
+              class="prose prose-neutral dark:prose-invert max-w-none
+                prose-headings:font-semibold prose-a:text-primary
+                prose-img:rounded-lg prose-pre:bg-muted prose-code:text-sm"
+              v-html="html"
+            />
+          </div>
+        </Card>
+      </template>
 
       <!-- GitHub Discussions 评论 -->
       <GiscusComments :config="GISCUS_CONFIG" :article-id="meta.id" />
