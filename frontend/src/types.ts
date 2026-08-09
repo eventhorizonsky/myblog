@@ -80,8 +80,8 @@ export interface GitHubRepo {
 
 export const CATEGORY_CONFIG: Record<string, { label: string; color: string }> = {
   all: { label: "全部", color: "" },
-  review: { label: "图文评测", color: "bg-amber-50 text-amber-700 border-amber-200" },
-  community: { label: "社区", color: "bg-purple-50 text-purple-700 border-purple-200" },
-  "game-comment": { label: "游戏短评", color: "bg-blue-50 text-blue-700 border-blue-200" },
-  general: { label: "日常", color: "bg-gray-50 text-gray-700 border-gray-200" },
+  review: { label: "图文评测", color: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30" },
+  community: { label: "社区", color: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/15 dark:text-purple-300 dark:border-purple-500/30" },
+  "game-comment": { label: "游戏短评", color: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/30" },
+  general: { label: "日常", color: "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-500/15 dark:text-gray-300 dark:border-gray-500/30" },
 };
