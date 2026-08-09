@@ -6,7 +6,7 @@ type: html
 linkid: 50245602
 link_tag: 11
 source: https://www.xiaoheihe.cn/app/bbs/link/50245602
-cover: "https://cdn.max-c.com/heybox/dailynews/img/bfdc45a682a3e998d392a6f54eb7d549.jpg"
+cover: "https://cdn.max-c.com/heybox/dailynews/img/86144e31838aacaa4b92fa31cfce5914.jpg"
 
 images:
   - "https://cdn.max-c.com/heybox/dailynews/img/bfdc45a682a3e998d392a6f54eb7d549.jpg"

@@ -6,7 +6,7 @@ type: html
 linkid: 51771718
 link_tag: 11
 source: https://www.xiaoheihe.cn/app/bbs/link/51771718
-cover: "https://cdn.max-c.com/heybox/dailynews/img/2f409134da065c664187b2175a729f90.png"
+cover: "https://cdn.max-c.com/heybox/dailynews/img/65dcbbe5309338429c30e21bc54ef6d7.png"
 
 images:
   - "https://cdn.max-c.com/heybox/dailynews/img/2f409134da065c664187b2175a729f90.png"

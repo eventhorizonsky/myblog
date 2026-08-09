@@ -72,7 +72,44 @@ function extractPlainText(raw: unknown): string {
   return str.replace(/<[^>]+>/g, "");
 }
 
-/** 解析内容块 → { type, body, images[] } */
+/**
+ * 将缩略图 URL 转换为原图 URL
+ * 支持以下模式（等价于小黑盒原图接口 /bbs/app/api/original/image 的返回结果）：
+ *   1. <hash>/thumb.<ext>?imageMogr2...            → <hash>.<ext>
+ *   2. img/<hash>.<ext>/thumb?imageMogr2...        → img/<hash>.<ext>
+ *   3. <hash>/thumb（无扩展名，bbs/imgs）            → <hash>
+ *   4. 任意带 imageMogr2 处理参数的原图 URL          → 去掉查询参数
+ *   5. bbsimg.maxjia.com 的 dailynews 图           → 换到 cdn.max-c.com（bbsimg 原图不可访问）
+ * 非缩略图 URL 原样返回（避免误伤游戏封面等地址）
+ */
+function toOriginalImageUrl(url: string): string {
+  if (!url) return url;
+  // 去掉 imageMogr2 等处理查询参数
+  const qIndex = url.indexOf("?");
+  const hasProcessingQuery = qIndex >= 0 && url.slice(qIndex).includes("imageMogr2");
+  const clean = hasProcessingQuery && qIndex >= 0 ? url.slice(0, qIndex) : url;
+  let result = clean;
+
+  // 模式1: <hash>/thumb.<ext>
+  const m1 = clean.match(/^(.+)\/thumb(\.[a-zA-Z0-9]+)$/);
+  if (m1) {
+    result = m1[1] + m1[2];
+  }
+  // 模式2/3: .../<ext>/thumb 或 <hash>/thumb（无扩展名）
+  else {
+    const m2 = clean.match(/^(.+)\/thumb$/);
+    if (m2) result = m2[1];
+  }
+
+  // 模式5: bbsimg.maxjia.com 的 dailynews 原图不可访问，换到 cdn.max-c.com
+  if (result.startsWith("https://bbsimg.maxjia.com/heybox/dailynews/")) {
+    result = result.replace("https://bbsimg.maxjia.com/", "https://cdn.max-c.com/");
+  }
+
+  return result;
+}
+
+/** 解析内容块 → { type, body, images[] }，images 均转换为原图 URL */
 function parseContent(raw: string): { type: string; body: string; images: string[] } {
   const imgs: string[] = [];
   if (!raw?.startsWith("[")) return { type: "text", body: (raw || "").replace(/<[^>]+>/g, ""), images: imgs };
@@ -83,8 +120,11 @@ function parseContent(raw: string): { type: string; body: string; images: string
     if (blocks[0]?.type === "html") {
       let h = blocks[0].text || "";
       const re = /<img\s+[^>]*data-original="([^"]*)"[^>]*\/>/gi;
-      let m; while ((m = re.exec(h)) !== null) imgs.push(m[1]);
-      h = h.replace(re, "\n![]($1)\n");
+      let m; while ((m = re.exec(h)) !== null) {
+        const orig = toOriginalImageUrl(m[1]);
+        imgs.push(orig);
+      }
+      h = h.replace(re, (_all, src: string) => `\n![](${toOriginalImageUrl(src)})\n`);
       h = h.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>\s*<p>/gi, "\n\n");
       h = h.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "\"");
       return { type: "html", body: h.trim(), images: imgs };
@@ -92,7 +132,7 @@ function parseContent(raw: string): { type: string; body: string; images: string
     // 格式2: 文本+图片块混排（图片单独列出，文字用空行分段）
     const texts: string[] = [];
     for (const b of blocks) {
-      if (b.type === "img" && b.url && !b.url.startsWith("/storage/")) imgs.push(b.url);
+      if (b.type === "img" && b.url && !b.url.startsWith("/storage/")) imgs.push(toOriginalImageUrl(b.url));
       else if (b.text) texts.push(b.text);
     }
     const body = texts.join("\n\n").replace(/<[^>]+>/g, "").trim();
@@ -102,6 +142,14 @@ function parseContent(raw: string): { type: string; body: string; images: string
 
 function slugify(text: string): string {
   return text.replace(/[^\w一-鿿]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+}
+
+/** 计算某条动态对应的文章路径 */
+function articleOutputPath(m: MomentItem): string {
+  const category = tagToCategory(m.link_tag || 0);
+  const date = new Date((m.modify_at || m.create_at || 0) * 1000).toISOString().split("T")[0];
+  const slug = `${date}-${slugify(m.title || "untitled")}`;
+  return path.join(OUTPUT_DIR, "articles", category, `${slug}.md`);
 }
 
 function tagToCategory(tag: number, contentType?: string): string {
@@ -117,6 +165,42 @@ function loadSyncState(): SyncState {
   const stateFile = path.join(OUTPUT_DIR, ".sync-state.json");
   try { return JSON.parse(fs.readFileSync(stateFile, "utf-8")); }
   catch { return { syncedLinkIds: [], lastSync: "" }; }
+}
+
+/** 读取文章 frontmatter 中的 linkid，用于清理因标题/日期变更而残留的旧文件 */
+function readArticleLinkId(filePath: string): number | null {
+  try {
+    const head = fs.readFileSync(filePath, "utf-8").slice(0, 500);
+    const m = head.match(/^linkid:\s*(\d+)/m);
+    return m ? Number(m[1]) : null;
+  } catch { return null; }
+}
+
+/** 全量模式下清理残留文章：仅清理 linkid 仍存在于动态列表、但标题/日期变更导致路径不一致的旧文件 */
+function cleanupStaleArticles(moments: MomentItem[]): void {
+  const momentPath = new Map<number, string>();
+  for (const m of moments) {
+    if (m.linkid) momentPath.set(m.linkid, path.resolve(articleOutputPath(m)));
+  }
+  const articlesDir = path.join(OUTPUT_DIR, "articles");
+  if (!fs.existsSync(articlesDir)) return;
+
+  const walk = (dir: string): void => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.isFile() && entry.name.endsWith(".md")) {
+        const linkid = readArticleLinkId(full);
+        if (linkid == null) continue; // 无 linkid 的本地文件不清理
+        const expected = momentPath.get(linkid);
+        if (expected && path.resolve(full) !== expected) {
+          fs.unlinkSync(full);
+          console.error(`    🧹 清理残留: ${path.basename(full)}`);
+        }
+      }
+    }
+  };
+  walk(articlesDir);
 }
 
 function saveSyncState(state: SyncState): void {
@@ -153,7 +237,7 @@ function buildUrl(path: string, extraParams: Record<string, string>): string {
   return `https://api.xiaoheihe.cn${path}?${new URLSearchParams(merged)}`;
 }
 
-async function fetchMoments(userId: string, cookie: string, syncedSet: Set<number>): Promise<MomentItem[]> {
+async function fetchMoments(userId: string, cookie: string, syncedSet: Set<number>, force = false): Promise<MomentItem[]> {
   const allMoments: MomentItem[] = [];
   let lastval = "";
   let page = 0;
@@ -174,11 +258,11 @@ async function fetchMoments(userId: string, cookie: string, syncedSet: Set<numbe
     const moments: MomentItem[] = (data.result?.moments || []).filter((m: MomentItem) => m.linkid);
     allMoments.push(...moments);
 
-    const newCount = moments.filter(m => !syncedSet.has(m.linkid)).length;
+    const newCount = force ? moments.length : moments.filter(m => !syncedSet.has(m.linkid)).length;
     console.error(`  第 ${page} 页: ${moments.length} 条 (新增 ${newCount}, 累计 ${allMoments.length})`);
 
     // 整页都是已同步的旧数据 → 后续页也不会再有新内容，提前终止
-    if (moments.length > 0 && newCount === 0) {
+    if (!force && moments.length > 0 && newCount === 0) {
       console.error(`  ⏹ 本页无新内容，停止分页`);
       break;
     }
@@ -191,7 +275,7 @@ async function fetchMoments(userId: string, cookie: string, syncedSet: Set<numbe
   return allMoments;
 }
 
-async function fetchFullContent(linkId: number, cookie: string): Promise<string | null> {
+async function fetchFullContent(linkId: number, cookie: string): Promise<{ raw: string; thumb: string } | null> {
   if (!cookie) return null;
   try {
     const base = getBaseApiParams();
@@ -205,8 +289,10 @@ async function fetchFullContent(linkId: number, cookie: string): Promise<string 
     const data = await fetchWithRetry(url, { ...HEIBOX_HEADERS, Cookie: cookie });
     if (data.status !== "ok" || !data?.result?.link) return null;
 
-    const raw = data.result.link.text || data.result.link.description || "";
-    return raw;
+    const link = data.result.link;
+    const raw = link.text || link.description || "";
+    const thumb = toOriginalImageUrl(link.thumb || "");
+    return { raw, thumb };
   } catch {
     return null;
   }
@@ -227,18 +313,14 @@ async function downloadImage(imgUrl: string, destPath: string): Promise<boolean>
 // Processors
 // ============================================================
 async function processTextMoment(
-  m: MomentItem, cookie: string, downloadImages: boolean
+  m: MomentItem, cookie: string, downloadImages: boolean, force = false
 ): Promise<void> {
-  const category = tagToCategory(m.link_tag || 0);
-  const catDir = path.join(OUTPUT_DIR, "articles", category);
+  const outputPath = articleOutputPath(m);
+  const catDir = path.dirname(outputPath);
   fs.mkdirSync(catDir, { recursive: true });
 
-  const date = new Date((m.modify_at || m.create_at || 0) * 1000).toISOString().split("T")[0];
-  const slug = `${date}-${slugify(m.title || "untitled")}`;
-  const outputPath = path.join(catDir, `${slug}.md`);
-
-  // 文件已存在则跳过（不重复拉取完整内容）
-  if (fs.existsSync(outputPath)) {
+  // 文件已存在则跳过（不重复拉取完整内容），--force 全量模式除外
+  if (!force && fs.existsSync(outputPath)) {
     console.error(`    ⏭ 跳过 (已存在)`);
     return;
   }
@@ -246,10 +328,12 @@ async function processTextMoment(
   // Get full content
   let raw = m.description || "";
   let parsed: { type: string; body: string; images: string[] } = { type: "text", body: raw, images: [] };
+  let coverImg = "";
   if (cookie) {
     const full = await fetchFullContent(m.linkid, cookie);
     if (full) {
-      raw = full;
+      raw = full.raw;
+      coverImg = full.thumb;
       parsed = parseContent(raw);
       console.error(`    ✅ 完整: ${parsed.body.length} 字, ${parsed.images.length} 图 [${parsed.type}]`);
     } else {
@@ -260,10 +344,14 @@ async function processTextMoment(
   } else {
   }
 
-  const cover = parsed.images.length > 0 ? `cover: "${parsed.images[0]}"` : "";
+  const cover = coverImg || (parsed.images.length > 0 ? parsed.images[0] : "");
+  const coverYaml = cover ? `cover: "${cover}"` : "";
   const imagesYaml = parsed.images.length > 0
     ? `\nimages:\n${parsed.images.map(u => `  - "${u}"`).join("\n")}`
     : "";
+
+  const date = new Date((m.modify_at || m.create_at || 0) * 1000).toISOString().split("T")[0];
+  const category = tagToCategory(m.link_tag || 0);
 
   const frontmatter = [
     "---",
@@ -274,7 +362,7 @@ async function processTextMoment(
     `linkid: ${m.linkid}`,
     `link_tag: ${m.link_tag || 0}`,
     `source: https://www.xiaoheihe.cn/app/bbs/link/${m.linkid}`,
-    cover,
+    coverYaml,
     imagesYaml,
     "---",
     "",
@@ -286,8 +374,9 @@ async function processTextMoment(
   if (downloadImages && m.imgs?.length) {
     const imgDir = path.join(IMAGES_DIR, "articles", String(m.linkid));
     for (const imgUrl of m.imgs) {
-      const filename = imgUrl.split("/").pop()?.split("?")[0] || "image.jpg";
-      const ok = await downloadImage(imgUrl, path.join(imgDir, filename));
+      const origUrl = toOriginalImageUrl(imgUrl);
+      const filename = origUrl.split("/").pop()?.split("?")[0] || "image.jpg";
+      const ok = await downloadImage(origUrl, path.join(imgDir, filename));
       console.error(`    📷 ${ok ? '✅' : '❌'} ${filename}`);
     }
   }
@@ -307,9 +396,9 @@ async function processGameMoment(
     const linkId = m.link?.linkid || m.linkid;
     const full = await fetchFullContent(linkId, cookie);
     if (full) {
-      // full 是从 link/tree 返回的原始 link.text（JSON数组字符串）
-      const parsed = parseContent(full);
-      review = parsed.body || full;
+      // full.raw 是从 link/tree 返回的原始 link.text（JSON数组字符串）
+      const parsed = parseContent(full.raw);
+      review = parsed.body || full.raw;
       console.error(`    ✅ 完整: ${review.length} 字`);
     }
     await delay(1500);
@@ -352,6 +441,7 @@ async function main() {
   const cookie = args.includes("--cookie") ? args[args.indexOf("--cookie") + 1] : (process.env.HEIBOX_COOKIE || "");
   const downloadImages = args.includes("--download-images");
   const gamesOnly = args.includes("--games-only");
+  const force = args.includes("--force");
   // 优先 --user-id → 环境变量 → 从 cookie 提取 user_heybox_id
   let userId = args.includes("--user-id") ? args[args.indexOf("--user-id") + 1] : process.env.HEIBOX_USER_ID || "";
   if (!userId && cookie) {
@@ -368,6 +458,7 @@ async function main() {
   console.log(`  用户ID: ${userId}${cookie && cookie.includes(userId) ? " (从 Cookie 提取)" : ""}`);
   console.log(`  Cookie: ${cookie ? "✅ 已设置" : "⚠ 未设置（将使用摘要而非完整内容）"}`);
   console.log(`  下载图片: ${downloadImages ? "✅" : "❌"}`);
+  console.log(`  全量重同步: ${force ? "✅" : "❌"}`);
   console.log(`  仅游戏: ${gamesOnly ? "✅" : "❌"}`);
   console.log(`  输出目录: ${OUTPUT_DIR}`);
   console.log("");
@@ -379,8 +470,8 @@ async function main() {
 
   // 2. Fetch all moments
   console.log("\n📥 拉取动态列表...");
-  const moments = await fetchMoments(userId, cookie, syncedSet);
-  const newMoments = moments.filter(m => !syncedSet.has(m.linkid));
+  const moments = await fetchMoments(userId, cookie, syncedSet, force);
+  const newMoments = force ? moments : moments.filter(m => !syncedSet.has(m.linkid));
   console.log(`  总计: ${moments.length} 条, 新增: ${newMoments.length} 条\n`);
 
   if (newMoments.length === 0) {
@@ -409,9 +500,16 @@ async function main() {
     for (let i = 0; i < textMoments.length; i++) {
       const m = textMoments[i];
       console.error(`  [${i + 1}/${textMoments.length}] ${(m.title || "无标题").slice(0, 30)}`);
-      await processTextMoment(m, cookie, downloadImages);
+      await processTextMoment(m, cookie, downloadImages, force);
     }
     console.log(`  ✅ 生成 ${textMoments.length} 篇 Markdown\n`);
+  }
+
+  // 4.5 全量模式清理标题/日期变更导致的残留文章
+  if (force && textMoments.length > 0) {
+    console.log("🧹 清理残留文章（标题/日期变更后的旧文件）...");
+    cleanupStaleArticles(moments);
+    console.log("");
   }
 
   // 5. Process game moments
@@ -439,13 +537,17 @@ async function main() {
     existingGames = JSON.parse(raw).games || [];
   } catch { /* no existing data */ }
 
-  const allGames = [...existingGames, ...gameReviews];
+  // 全量模式直接替换游戏数据，避免重复
+  const allGames = force ? gameReviews : [...existingGames, ...gameReviews];
   fs.writeFileSync(frontendGamesPath, JSON.stringify({ games: allGames }, null, 2));
-  console.log(`  ✅ 游戏评测: ${gameReviews.length} 条新增 (总计 ${allGames.length})\n`);
+  console.log(`  ✅ 游戏评测: ${gameReviews.length} 条${force ? "（全量替换）" : "新增"} (总计 ${allGames.length})\n`);
 
   // 7. Save sync state (games-only 模式只记录游戏 ID)
   if (gamesOnly) {
     for (const m of gameMoments) syncedSet.add(m.linkid);
+  } else if (force) {
+    syncedSet.clear();
+    for (const m of moments) syncedSet.add(m.linkid);
   } else {
     for (const m of newMoments) syncedSet.add(m.linkid);
   }
@@ -457,7 +559,7 @@ async function main() {
   console.log(`  📝 文章: ${textMoments.length} 篇 → ${OUTPUT_DIR}/articles/`);
   console.log(`  🎮 游戏: ${gameReviews.length} 条 → ${frontendGamesPath}`);
   console.log(`  📹 媒体: ${mediaMoments.length} 条 (跳过)`);
-  console.log(`  💾 已同步总数: ${syncedSet.size + newMoments.length}`);
+  console.log(`  💾 已同步总数: ${syncedSet.size}`);
   console.log("═══════════════════════════════════");
 }
 
