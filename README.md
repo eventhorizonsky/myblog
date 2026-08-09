@@ -122,6 +122,7 @@ images:
 | `BANGUMI_API_URL` | ❌ | `https://api.bgm.tv` | Bangumi 镜像 API 地址 |
 | `BANGUMI_USERNAME` | ✅ | — | Bangumi 用户名，用于拉取追番收藏 |
 | `SITE_TITLE` | ❌ | `EventHorizon Blog` | 博客名称，显示在左上角和首页 |
+| `SITE_DESCRIPTION` | ❌ | — | 首页副标题文案（如 `游戏评测 · 技术分享 · 动漫追番`），未设置时显示默认值 |
 | `ICP_BEIAN` | ❌ | — | ICP 备案号，显示在页面底部 |
 | `PORT` | ❌ | `8080` | 后端监听端口 |
 | `DIST_DIR` | ❌ | `../frontend/dist` | 前端构建产物目录 |

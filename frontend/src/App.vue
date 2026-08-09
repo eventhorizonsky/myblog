@@ -4,6 +4,7 @@ import AppHeader from "@/components/AppHeader.vue";
 
 export interface SiteConfig {
   title: string;
+  description?: string;
   icp_beian?: string;
 }
 

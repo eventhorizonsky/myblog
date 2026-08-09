@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { fetchArticles } from "@/utils/markdown";
 import type { ArticleMeta, GameReview, AnimeCollection, GitHubRepo } from "@/types";
 import ArticleCard from "@/components/ArticleCard.vue";
@@ -13,7 +13,8 @@ import type { SiteConfig } from "@/App.vue";
 
 const router = useRouter();
 const siteConfig = inject<Ref<SiteConfig>>("siteConfig");
-const siteTitle = siteConfig?.value?.title || "EventHorizon Blog";
+const siteTitle = computed(() => siteConfig?.value?.title || "EventHorizon Blog");
+const siteDescription = computed(() => siteConfig?.value?.description || "游戏评测 · 技术分享 · 动漫追番");
 
 // 文章
 const articles = ref<ArticleMeta[]>([]);
@@ -77,7 +78,7 @@ onMounted(() => { loadArticles(); loadGames(); loadAnime(); loadProjects(); });
         {{ siteTitle }}
       </h1>
       <p class="text-muted-foreground mt-2 max-w-md mx-auto text-sm">
-        游戏评测 · 技术分享 · 动漫追番
+        {{ siteDescription }}
       </p>
     </div>
 

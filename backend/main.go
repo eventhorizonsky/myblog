@@ -62,8 +62,9 @@ func main() {
 }
 
 type siteConfig struct {
-	Title    string `json:"title"`
-	IcpBeian string `json:"icp_beian,omitempty"`
+	Title       string `json:"title"`
+	Description string `json:"description,omitempty"`
+	IcpBeian    string `json:"icp_beian,omitempty"`
 }
 
 func siteConfigHandler(w http.ResponseWriter, r *http.Request) {
@@ -73,8 +74,9 @@ func siteConfigHandler(w http.ResponseWriter, r *http.Request) {
 		title = "EventHorizon Blog"
 	}
 	json.NewEncoder(w).Encode(siteConfig{
-		Title:    title,
-		IcpBeian: os.Getenv("ICP_BEIAN"),
+		Title:       title,
+		Description: os.Getenv("SITE_DESCRIPTION"),
+		IcpBeian:    os.Getenv("ICP_BEIAN"),
 	})
 }
 
