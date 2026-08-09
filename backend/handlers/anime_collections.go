@@ -7,11 +7,29 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
+	"sync"
+	"time"
+)
+
+// ====== 缓存 ======
+
+const animeCacheTTL = 24 * time.Hour
+
+type animeCacheEntry struct {
+	data      []byte
+	timestamp time.Time
+}
+
+var (
+	animeCache   = map[string]*animeCacheEntry{}
+	animeCacheMu sync.RWMutex
 )
 
 func AnimeCollectionsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Cache-Control", "public, max-age=86400")
 
 	apiURL := os.Getenv("BANGUMI_API_URL")
 	if apiURL == "" {
@@ -34,13 +52,42 @@ func AnimeCollectionsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	typeFilter := r.URL.Query().Get("type")
 
+	cacheKey := strings.Join([]string{username, typeFilter, limit, offset}, "|")
+
+	// 读缓存
+	animeCacheMu.RLock()
+	if e, ok := animeCache[cacheKey]; ok && time.Since(e.timestamp) < animeCacheTTL {
+		data := e.data
+		animeCacheMu.RUnlock()
+		w.Write(data)
+		return
+	}
+	animeCacheMu.RUnlock()
+
 	data, err := fetchAnimeCollections(apiURL, username, typeFilter, limit, offset)
 	if err != nil {
 		log.Printf("[anime-collections] fetch error: %v", err)
+
+		// 尝试返回过期缓存
+		animeCacheMu.RLock()
+		if e, ok := animeCache[cacheKey]; ok {
+			stale := e.data
+			animeCacheMu.RUnlock()
+			log.Printf("[anime-collections] serving stale cache")
+			w.Write(stale)
+			return
+		}
+		animeCacheMu.RUnlock()
+
 		w.WriteHeader(http.StatusServiceUnavailable)
 		json.NewEncoder(w).Encode(map[string]string{"error": "fetch failed"})
 		return
 	}
+
+	// 更新缓存
+	animeCacheMu.Lock()
+	animeCache[cacheKey] = &animeCacheEntry{data: data, timestamp: time.Now()}
+	animeCacheMu.Unlock()
 
 	w.Write(data)
 }

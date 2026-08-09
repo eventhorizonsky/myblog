@@ -13,6 +13,13 @@ const hasOriginalName = props.item.subject.name_cn && props.item.subject.name !=
 const hasPersonalRating = props.item.rate > 0;
 const hasComment = !!props.item.comment;
 
+const watchedEps = props.item.ep_status || 0;
+const totalEps = props.item.subject.eps || 0;
+const hasProgress = watchedEps > 0;
+const progressPct = totalEps > 0
+  ? Math.min(100, Math.round((watchedEps / totalEps) * 100))
+  : 0;
+
 const imageLoaded = ref(false);
 const imageError = ref(false);
 
@@ -72,12 +79,24 @@ function onImageError() {
       </div>
     </div>
 
-    <!-- 紧凑模式：仅封面+标题 -->
+    <!-- 紧凑模式：封面+标题+进度 -->
     <template v-if="compact">
       <div class="p-2">
         <h4 class="font-medium text-xs leading-snug line-clamp-2 text-center">
           {{ displayName }}
         </h4>
+        <div v-if="hasProgress" class="mt-2 space-y-1">
+          <div class="h-1 rounded-full bg-muted-foreground/20 overflow-hidden">
+            <div
+              class="h-full bg-primary rounded-full"
+              :style="{ width: (progressPct || 4) + '%' }"
+            />
+          </div>
+          <p class="text-center text-[10px] text-muted-foreground leading-none">
+            <template v-if="totalEps > 0">{{ watchedEps }} / {{ totalEps }} 话</template>
+            <template v-else>看到第 {{ watchedEps }} 话</template>
+          </p>
+        </div>
       </div>
     </template>
 
@@ -108,6 +127,26 @@ function onImageError() {
         <ThumbsUp class="h-4 w-4" />
         <span class="font-bold text-base">{{ item.rate }}</span>
         <span class="text-xs text-muted-foreground">/ 10</span>
+      </div>
+
+      <div v-if="hasProgress" class="space-y-1">
+        <div class="flex items-center justify-between text-[11px] text-muted-foreground/70">
+          <span class="flex items-center gap-0.5">
+            <template v-if="totalEps > 0">
+              看到 {{ watchedEps }} / {{ totalEps }} 话
+            </template>
+            <template v-else>
+              看到第 {{ watchedEps }} 话
+            </template>
+          </span>
+          <span v-if="totalEps > 0">{{ progressPct }}%</span>
+        </div>
+        <div class="h-1 rounded-full bg-muted-foreground/20 overflow-hidden">
+          <div
+            class="h-full bg-primary rounded-full transition-all"
+            :style="{ width: (progressPct || 4) + '%' }"
+          />
+        </div>
       </div>
 
       <div class="flex items-center gap-2 flex-wrap text-[11px] text-muted-foreground/60 pt-0.5 border-t border-border/30">
