@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -66,9 +67,16 @@ func LoadArticles(contentDir string) error {
 			}
 			meta, content := parseFrontmatter(string(raw))
 
-			// 从路径提取 id
-			id := filepath.Base(path)
-			id = strings.TrimSuffix(id, ".md")
+			// 从路径提取文件名 id（用于兼容旧链接）
+			fileID := filepath.Base(path)
+			fileID = strings.TrimSuffix(fileID, ".md")
+
+			// 对外 id 优先用 linkid：纯 ASCII（URL 不出现中文/百分号编码），
+			// 且不随标题/日期变更而变（giscus 等按 pathname 关联的评论不会丢）
+			id := fileID
+			if meta.LinkID > 0 {
+				id = strconv.FormatInt(int64(meta.LinkID), 10)
+			}
 			meta.ID = id
 
 			// 计算摘要
@@ -78,6 +86,10 @@ func LoadArticles(contentDir string) error {
 
 			articlesMeta = append(articlesMeta, meta)
 			articlesDetail[id] = &ArticleDetail{ArticleMeta: meta, Content: content}
+			// 保留旧文件名 id 别名，旧链接（如 /api/articles/2026-08-29-3-6简评）不失效
+			if fileID != id {
+				articlesDetail[fileID] = articlesDetail[id]
+			}
 
 			return nil
 		})

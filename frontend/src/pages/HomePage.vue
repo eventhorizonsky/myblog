@@ -31,7 +31,13 @@ const games = ref<GameReview[]>([]);
 async function loadGames() {
   try {
     const res = await fetch(`${import.meta.env.BASE_URL}content/games/games.json`);
-    if (res.ok) { const data = await res.json(); games.value = (data.games || []).slice(0, 4); }
+    if (res.ok) {
+      const data = await res.json();
+      // 按评测日期取最新 4 条（games.json 顺序可能受历史同步影响，不依赖数组顺序）
+      games.value = [...(data.games || [])]
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 4);
+    }
   } catch { /* ignore */ }
 }
 

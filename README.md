@@ -187,3 +187,5 @@ docker run -p 80:80 myblog
 ## 本地文章
 
 在 `frontend/doc/` 目录下创建 `.md` 文件即可，格式同上。`content/articles/` 为同步脚本产出，建议 gitignore。
+
+ npx tsx sync-heihe.ts --cookie 'cookie' --user-id 18962761

@@ -165,6 +165,16 @@ function tagToCategory(tag: number, contentType?: string): string {
   return "general";
 }
 
+/** 按 linkId 去重，保留数组中靠前（更新）的一条 */
+function dedupeByLinkId(list: GameReview[]): GameReview[] {
+  const seen = new Set<number>();
+  return list.filter(g => {
+    if (seen.has(g.linkId)) return false;
+    seen.add(g.linkId);
+    return true;
+  });
+}
+
 function loadSyncState(): SyncState {
   const stateFile = path.join(OUTPUT_DIR, ".sync-state.json");
   try { return JSON.parse(fs.readFileSync(stateFile, "utf-8")); }
@@ -553,8 +563,11 @@ async function main() {
     existingGames = JSON.parse(raw).games || [];
   } catch { /* no existing data */ }
 
-  // 全量模式直接替换游戏数据，避免重复
-  const allGames = force ? gameReviews : [...existingGames, ...gameReviews];
+  // 全量模式直接替换游戏数据，避免重复；
+  // 增量模式：新评测插到最前（最新在前，首页按数组前几条取"最近评测"），并按 linkId 去重
+  const allGames = force
+    ? gameReviews
+    : dedupeByLinkId([...gameReviews, ...existingGames]);
   fs.writeFileSync(frontendGamesPath, JSON.stringify({ games: allGames }, null, 2));
   console.log(`  ✅ 游戏评测: ${gameReviews.length} 条${force ? "（全量替换）" : "新增"} (总计 ${allGames.length})\n`);
 
