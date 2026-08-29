@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, onMounted } from "vue";
 import type { GameReview } from "@/types";
 import GameCard from "@/components/GameCard.vue";
 import GameStatCard from "@/components/GameStatCard.vue";
@@ -63,31 +63,9 @@ async function loadStats() {
   finally { statsLoading.value = false }
 }
 
-onMounted(() => {
-  loadGames();
-  loadStats();
-  updateColumnCount();
-  window.addEventListener("resize", updateColumnCount);
-});
-onBeforeUnmount(() => window.removeEventListener("resize", updateColumnCount));
-
-// 瀑布流列数（与 Tailwind sm/lg 断点一致：640 / 1024）
-const columnCount = ref(1);
-function updateColumnCount() {
-  const w = window.innerWidth;
-  columnCount.value = w >= 1024 ? 3 : w >= 640 ? 2 : 1;
-}
+onMounted(() => { loadGames(); loadStats(); });
 
 const sortedGames = computed(() => [...games.value].sort((a, b) => b.date.localeCompare(a.date)));
-
-// 行优先分列：每行放当前最新的 N 个，保证新评测靠上。
-// （CSS columns 是按列优先填充，第 1 列堆最新、中/右列从列表 1/3、2/3 处开始，同一行会混入不同时期的评测）
-const gameColumns = computed(() => {
-  const c = columnCount.value;
-  const cols: GameReview[][] = Array.from({ length: c }, () => []);
-  sortedGames.value.forEach((g, i) => cols[i % c].push(g));
-  return cols;
-});
 
 function fmtHours(h: number) {
   if (h >= 1000) return (h / 1000).toFixed(1) + "k h";
@@ -177,10 +155,8 @@ function fmtHours(h: number) {
     <!-- ====== 游戏评测 ====== -->
     <section>
       <h2 class="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">游戏评测</h2>
-      <div v-if="sortedGames.length > 0" class="flex items-start gap-4">
-        <div v-for="(col, ci) in gameColumns" :key="ci" class="flex-1 min-w-0 space-y-4">
-          <GameCard v-for="g in col" :key="g.linkId" :game="g" />
-        </div>
+      <div v-if="sortedGames.length > 0" class="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
+        <GameCard v-for="g in sortedGames" :key="g.linkId" :game="g" />
       </div>
       <div v-else class="text-center py-16 text-muted-foreground">
         <Gamepad2 class="h-12 w-12 mx-auto mb-3 opacity-30" />
