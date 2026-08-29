@@ -291,7 +291,15 @@ async function fetchFullContent(linkId: number, cookie: string): Promise<{ raw: 
     const url = `https://api.xiaoheihe.cn/bbs/app/link/tree?${params.toString().replace("&link_id=", "&h_src&link_id=")}`;
 
     const data = await fetchWithRetry(url, { ...HEIBOX_HEADERS, Cookie: cookie });
-    if (data.status !== "ok" || !data?.result?.link) return null;
+    if (data.status !== "ok" || !data?.result?.link) {
+      // 非 ok（如 show_captcha 风控拦截/验证码）或响应缺少 link 时说明原因，
+      // 避免静默降级为摘要让人误以为是接口没有正文
+      const reason = data.status !== "ok"
+        ? `status=${JSON.stringify(data.status)}${data.msg ? `, msg=${JSON.stringify(data.msg)}` : ""}`
+        : "响应缺少 result.link";
+      console.error(`    ⚠ link/tree 获取失败: ${reason}（风控/验证码会拦截，稍后重试或刷新 Cookie）`);
+      return null;
+    }
 
     const link = data.result.link;
     const raw = link.text || link.description || "";
