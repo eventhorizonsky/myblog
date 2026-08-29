@@ -427,14 +427,14 @@ async function processGameMoment(
   const timestamp = m.modify_at || m.create_at || m.link?.modify_at || m.link?.create_at || 0;
   const date = new Date(timestamp * 1000).toISOString().split("T")[0];
 
-  // Download cover
-  let coverImage = game.image || "";
+  // Download cover（仅备份到本地 content-images，与文章图片一致：
+  // 备份目录已被 .gitignore 忽略、不会上传，因此 games.json 始终保留原图 URL，不改写为本地路径）
+  const coverImage = game.image || "";
   if (downloadImages && coverImage) {
     const filename = `cover-${game.steam_appid}.jpg`;
     const destPath = path.join(IMAGES_DIR, "games", filename);
-    if (await downloadImage(coverImage, destPath)) {
-      coverImage = `/content-images/games/${filename}`;
-    }
+    const ok = await downloadImage(coverImage, destPath);
+    console.error(`    📷 ${ok ? "✅" : "❌"} games/${filename}（备份，URL 不变）`);
   }
 
   gameReviews.push({
