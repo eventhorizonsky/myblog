@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import { X, ChevronLeft, ChevronRight, Loader2 } from "lucide-vue-next";
 
 export interface LightboxImage {
@@ -21,14 +21,37 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{ close: [] }>();
 
 const index = ref(props.initialIndex);
-// 原图是否已加载完成（用于缩略图占位 → 原图淡入）
+// 原图是否已加载完成（用于占位层 → 原图淡入）
 const loaded = ref(false);
+// 缩略图加载失败时，退回直接加载原图
+const thumbFailed = ref(false);
+
+const current = computed(() => props.images[index.value]);
+
+/**
+ * 是否有独立的原图需要加载。
+ * 有 thumb 且 thumb !== src 时，才需要「缩略图占位 + 原图覆盖」这套逻辑；
+ * 否则直接显示 src 本身（普通图片、或 thumb 与原图相同的场景）。
+ */
+const needsOrigin = computed(() => {
+  if (!current.value) return false;
+  if (thumbFailed.value) return false;
+  return !!current.value.thumb && current.value.thumb !== current.value.src;
+});
+
+/** 占位层显示什么：优先用缩略图，退化时直接用原图 */
+const placeholderSrc = computed(() => {
+  const img = current.value;
+  if (!img) return "";
+  if (img.thumb && !thumbFailed.value) return img.thumb;
+  return img.src;
+});
 
 // 切换图片时重置加载状态
-watch(index, () => { loaded.value = false; });
+watch(index, () => { loaded.value = false; thumbFailed.value = false; });
 
 watch(() => props.open, (val) => {
-  if (val) { index.value = props.initialIndex; loaded.value = false; }
+  if (val) { index.value = props.initialIndex; loaded.value = false; thumbFailed.value = false; }
 });
 
 watch(() => props.initialIndex, (val) => {
@@ -122,32 +145,39 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
         <ChevronRight class="h-6 w-6" />
       </button>
 
-      <!-- 图片：先用正文里已缓存的缩略图占位，原图加载完成后再淡入 -->
-      <div v-if="images[index]" class="relative flex items-center justify-center">
+      <!-- 图片：占位层始终在文档流中撑开尺寸，原图作为覆盖层淡入 -->
+      <div v-if="images[index]" class="relative">
+        <!--
+          占位层：负责决定容器尺寸，保证整块居中且不变形。
+          原图加载完成后给它加 opacity-0 隐藏（但保留占位，避免容器塌缩导致位置跳动）。
+        -->
         <img
-          v-if="images[index].thumb && !loaded"
-          :src="images[index].thumb"
+          :src="placeholderSrc"
           alt=""
-          class="max-w-[92vw] max-h-[85vh] object-contain select-none blur-sm opacity-70"
+          class="max-w-[92vw] max-h-[85vh] object-contain select-none transition-opacity duration-200"
+          :class="[
+            needsOrigin && !loaded ? 'blur-sm opacity-80' : '',
+            needsOrigin && loaded ? 'opacity-0' : '',
+          ]"
           draggable="false"
           aria-hidden="true"
+          @error="thumbFailed = true"
         />
+        <!-- 原图层：绝对覆盖在占位层之上，加载完成后淡入 -->
         <img
+          v-if="needsOrigin"
           :key="images[index].src"
           :src="images[index].src"
           :alt="images[index].alt"
-          :class="[
-            'max-w-[92vw] max-h-[85vh] object-contain select-none transition-opacity duration-200',
-            images[index].thumb ? 'absolute inset-0 m-auto' : '',
-            loaded ? 'opacity-100' : 'opacity-0',
-          ]"
+          class="absolute inset-0 w-full h-full object-contain select-none transition-opacity duration-200"
+          :class="loaded ? 'opacity-100' : 'opacity-0'"
           draggable="false"
           @load="loaded = true"
         />
         <!-- 原图加载中的提示 -->
         <div
-          v-if="!loaded"
-          class="absolute bottom-[-2rem] left-1/2 -translate-x-1/2 text-xs text-white/60 flex items-center gap-1"
+          v-if="needsOrigin && !loaded"
+          class="absolute bottom-[-2rem] left-0 right-0 flex items-center justify-center gap-1 text-xs text-white/60 pointer-events-none"
         >
           <Loader2 class="h-3 w-3 animate-spin" /> 加载原图中…
         </div>
