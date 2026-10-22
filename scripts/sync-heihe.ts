@@ -25,11 +25,16 @@ const DOC_DIR = path.resolve(__dirname, config.docDir || "../frontend/doc");
 const IMAGE_BACKUP_DIR = path.resolve(__dirname, config.imageBackupDir || "../frontend/content-images");
 
 const HEIBOX_HEADERS: Record<string, string> = {
-  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/150.0.0.0 Safari/537.36",
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
   Accept: "application/json, text/plain, */*",
   "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-  Referer: "https://www.xiaoheihe.cn/",
-  Origin: "https://www.xiaoheihe.cn",
+  "Cache-Control": "no-cache",
+  Pragma: "no-cache",
+  Referer: "https://xiaoheihe.cn/",
+  Origin: "https://xiaoheihe.cn",
+  "Sec-Fetch-Dest": "empty",
+  "Sec-Fetch-Mode": "cors",
+  "Sec-Fetch-Site": "same-site",
 };
 
 // ============================================================
@@ -323,7 +328,7 @@ async function fetchMoments(userId: string, cookie: string, syncedSet: Set<numbe
   while (true) {
     page++;
     const url = buildUrl("/bbs/app/profile/events", {
-      dw: "636", lastval, list_type: "moment", userid: userId,
+      dw: "808", lastval, list_type: "moment", userid: userId,
     });
     const headers = cookie ? { ...HEIBOX_HEADERS, Cookie: cookie } : HEIBOX_HEADERS;
 

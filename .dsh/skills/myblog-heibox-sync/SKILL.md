@@ -16,9 +16,14 @@ whenToUse: "用户在本仓库（D:\\MyProject\\myblog）提供小黑盒 Cookie 
 
 ```powershell
 cd D:\MyProject\myblog\scripts
-# 把用户给的整条 Cookie 存进环境变量，避免命令行转义问题
+# 把用户给的整条 Cookie 原样存进环境变量，避免命令行转义问题
 $env:TEST_COOKIE = '<粘贴完整 Cookie>'
 ```
+
+**Cookie 必须是「完整登录态」**：除了用户平时给的字段，建议包含 `user_pkey` 和 `user_heybox_id`
+（从浏览器 www.xiaoheihe.cn 的请求头里复制那段最完整的 `-b` 内容）。
+少了这两个字段时接口通常仍返回 `ok`，但**列表窗口会变窄**，最新文章可能被切掉——静默漏同步，很难发现。
+Cookie 里的 `pkey` / `user_pkey` 值是一样的，只是键名不同。
 
 新建 `scripts/_probe.ts`，内容如下，用 `npx tsx _probe.ts` 运行：
 
@@ -27,8 +32,8 @@ import { createSignedParams, getBaseApiParams } from "./heibox-signing.ts";
 const cookie = process.env.TEST_COOKIE || "";
 const base = getBaseApiParams();
 const s = createSignedParams("/bbs/app/profile/events");
-const p = new URLSearchParams({ ...base, hkey: s.hkey, _time: String(s._time), nonce: s.nonce, dw: "636", lastval: "", list_type: "moment", userid: "18962761" });
-const r = await fetch("https://api.xiaoheihe.cn/bbs/app/profile/events?" + p, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/150.0.0.0 Safari/537.36", Accept: "application/json, text/plain, */*", Referer: "https://www.xiaoheihe.cn/", Origin: "https://www.xiaoheihe.cn", Cookie: cookie } });
+const p = new URLSearchParams({ ...base, hkey: s.hkey, _time: String(s._time), nonce: s.nonce, dw: "808", lastval: "", list_type: "moment", userid: "18962761" });
+const r = await fetch("https://api.xiaoheihe.cn/bbs/app/profile/events?" + p, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36", Accept: "application/json, text/plain, */*", "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8", Referer: "https://xiaoheihe.cn/", Origin: "https://xiaoheihe.cn", Cookie: cookie } });
 const j = await r.json();
 console.log("status=", j.status, "msg=", JSON.stringify(j.msg || ""), "count=", j.result?.moments?.length);
 for (const x of (j.result?.moments || []).slice(0, 6)) {
@@ -77,6 +82,22 @@ $d='frontend\content-images'
 ```
 
 **必须检查 0 字节文件数为 0**，否则说明有图片下载失败。
+
+### 3.1 用户说「某篇没同步」时（重要，实战踩过）
+
+如果用户点名一篇文章没同步，**先别怀疑用户**。真实案例：「【轻小说推荐】学园第一美少女做我的秘书」曾漏掉，
+根因是脚本用 `dw=636` 请求动态列表，接口只返回 28 条且不含该篇；改成 **`dw=808`** 后返回 30 条，
+该篇就在第 3 条。`dw` 是客户端宽度/版本指纹参数，**不同值会让服务端返回不同的列表窗口**。
+
+排查顺序：
+
+1. 用完整 Cookie（**必须包含 `user_pkey` 和 `user_heybox_id`**）按 `dw=808` 请求一次，看该篇在不在第一页。
+2. 若 `status=show_captcha`，是短时间翻页太密触发风控，**停手等 1~2 分钟**，不要连续重试（会越锁越久）。
+3. 确认存在于列表 → 直接跑同步，脚本会按 linkid 去重后补抓。
+4. 若列表里确实没有 → 可能是用户删了/仅自己可见，如实告知，不要硬造。
+
+历史踩坑记录：某次排查时确认 sync state 里没有该 linkid，且首页 28 条最新只到 `190807237`（09-21），
+目标文章 `193262469`（10-09）被列表窗口切掉了——**不是已同步过，而是压根没进过候选集**。
 
 ## 四、提交发布
 
