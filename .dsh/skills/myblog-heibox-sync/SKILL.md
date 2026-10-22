@@ -99,6 +99,31 @@ $d='frontend\content-images'
 历史踩坑记录：某次排查时确认 sync state 里没有该 linkid，且首页 28 条最新只到 `190807237`（09-21），
 目标文章 `193262469`（10-09）被列表窗口切掉了——**不是已同步过，而是压根没进过候选集**。
 
+## 三·二、图片：缩略图展示 + 灯箱原图
+
+正文图片**不再直接使用原图 URL**。原图动辄 4MB（长文几十张就是几百兆），文章页只加载压缩图：
+
+- 正文里写成 `<img src="缩略图" data-origin="原图">`，灯箱靠 `data-origin` 取原图。
+- frontmatter 里 `images` 存原图、`thumbs` 存缩略图，两者**一一对应**，画廊和封面用 `thumbs`。
+- 缩略图规则（`toThumbnailUrl()`）：`原图URL + "?imageMogr2/thumbnail/1280x/format/jpg/quality/80"`，
+  实测 4.1MB → 91KB。
+
+适用于两个图床域名：`*.max-c.com`（现用）和 `*.maxjia.com`（老文章，**路径常带双斜杠**
+如 `bbsimg.maxjia.com//heybox/…`，判断域名前要先把 `域名//` 归一化成 `域名/`）。
+
+**新同步的文章脚本已自动处理，不需要额外步骤。**
+只有当仓库里存在旧格式（正文是 `![]()` 原图）时才需要跑：
+
+```powershell
+cd D:\MyProject\myblog\scripts
+npx tsx thumbnailize-articles.ts --dry-run   # 先看统计
+npx tsx thumbnailize-articles.ts
+```
+
+注意：这个脚本**基于当前文件状态幂等**，重复跑不会重复加 `thumbs`。
+但如果中途手动改坏了，先 `git checkout -- frontend/content/articles` 回到干净状态再跑，
+不要在被污染的文件上叠加运行。
+
 ## 四、提交发布
 
 文章目录**按分类分文件夹**（`articles/kuro/`、`articles/zhou-pi/` 等），脚本会自动落到正确目录，不要再手动新建 `review/`、`community/` 之类的旧目录。
