@@ -155,17 +155,18 @@ function slugify(text: string): string {
 }
 
 /**
- * 文章存放目录：只区分「图文混排评测」与「社区帖」两类，与博客分类无关。
- * 博客分类（kuro / zhou-pi / light-novel 等）写在 frontmatter 里，历史上这些文章
- * 也一直存放在 community 或 review 目录下，所以目录不随分类变化，避免文件路径来回搬家。
+ * 文章存放目录 = 博客分类目录。
+ * 后端递归扫描 content/articles/** 并以 frontmatter 的 linkid 作为对外 id，
+ * 所以目录名只影响归档方式，不影响文章 URL / 评论关联。
+ * 这样 articles/ 下一级目录就是分类名（kuro、zhou-pi、light-novel…），一眼能看懂。
  */
-function outputDirName(tag: number): string {
-  return tag === 11 ? "review" : "community";
+function outputDirName(m: MomentItem): string {
+  return resolveCategory(m);
 }
 
 /** 计算某条动态对应的文章路径 */
 function articleOutputPath(m: MomentItem): string {
-  const dirName = outputDirName(m.link_tag || 0);
+  const dirName = outputDirName(m);
   const date = new Date((m.modify_at || m.create_at || 0) * 1000).toISOString().split("T")[0];
   const slug = `${date}-${slugify(m.title || "untitled")}`;
   return path.join(OUTPUT_DIR, "articles", dirName, `${slug}.md`);
