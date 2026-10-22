@@ -24,6 +24,7 @@ type ArticleMeta struct {
 	Type     string   `json:"type,omitempty"`
 	Cover    string   `json:"cover,omitempty"`
 	Images   []string `json:"images,omitempty"`
+	Thumbs   []string `json:"thumbs,omitempty"`
 	LinkID   int      `json:"linkid,omitempty"`
 	LinkTag  int      `json:"link_tag,omitempty"`
 	Source   string   `json:"source,omitempty"`
@@ -275,6 +276,10 @@ func setMetaField(meta *ArticleMeta, key string, value interface{}) {
 	case "images":
 		if arr, ok := value.([]string); ok {
 			meta.Images = arr
+		}
+	case "thumbs":
+		if arr, ok := value.([]string); ok {
+			meta.Thumbs = arr
 		}
 	}
 }

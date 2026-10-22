@@ -124,6 +124,27 @@ function toOriginalImageUrl(url: string): string {
   return result;
 }
 
+/**
+ * 由原图 URL 生成「文章页展示用」的缩略图 URL。
+ * 小黑盒 CDN 支持 imageMogr2 处理参数：
+ *   ?imageMogr2/thumbnail/1280x/format/jpg/quality/80
+ * 实测同一张 PNG 原图 4.1MB → 91KB，长文场景下差别巨大。
+ * 灯箱仍然加载原图，所以这里只影响列表/正文展示。
+ * 非小黑盒 CDN 的地址原样返回（拼参数可能 404）。
+ */
+function toThumbnailUrl(originalUrl: string): string {
+  if (!originalUrl) return originalUrl;
+  // 只处理已知支持 imageMogr2 的小黑盒图床（max-c.com 现用、maxjia.com 老文章；
+  // 老图 URL 常带双斜杠如 bbsimg.maxjia.com//heybox/…，先归一化域名后的斜杠再判断）
+  const normalized = originalUrl.replace(/(\.com)\/+/i, "$1/");
+  if (!/^https?:\/\/(imgheybox\d*|cdn|bbsimg)\.(max-c|maxjia)\.com\//i.test(normalized)) {
+    return originalUrl;
+  }
+  // 已带处理参数的不重复追加
+  if (originalUrl.includes("imageMogr2")) return originalUrl;
+  return `${originalUrl}?imageMogr2/thumbnail/1280x/format/jpg/quality/80`;
+}
+
 /** 解析内容块 → { type, body, images[] }，images 均转换为原图 URL */
 function parseContent(raw: string): { type: string; body: string; images: string[] } {
   const imgs: string[] = [];
@@ -139,7 +160,13 @@ function parseContent(raw: string): { type: string; body: string; images: string
         const orig = toOriginalImageUrl(m[1]);
         imgs.push(orig);
       }
-      h = h.replace(re, (_all: string, src: string) => `\n![](${toOriginalImageUrl(src)})\n`);
+      // 正文里先放缩略图（用 HTML img + data-origin 标注原图），
+      // 前端渲染时把 data-origin 取出来给灯箱用，避免长文一次拉几百兆原图。
+      h = h.replace(re, (_all: string, src: string) => {
+        const orig = toOriginalImageUrl(src);
+        const thumb = toThumbnailUrl(orig);
+        return `\n<img src="${thumb}" data-origin="${orig}" alt="" loading="lazy" decoding="async" />\n`;
+      });
       h = h.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>\s*<p>/gi, "\n\n");
       h = h.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "\"");
       return { type: "html", body: h.trim(), images: imgs };
@@ -437,8 +464,14 @@ async function processTextMoment(
 
   const cover = coverImg || (parsed.images.length > 0 ? parsed.images[0] : "");
   const coverYaml = cover ? `cover: "${cover}"` : "";
+  // 同时记录原图与缩略图两套地址：
+  //   images = 原图（灯箱/下载用）
+  //   thumbs = 文章页展示用缩略图（与 images 一一对应）
   const imagesYaml = parsed.images.length > 0
     ? `\nimages:\n${parsed.images.map(u => `  - "${u}"`).join("\n")}`
+    : "";
+  const thumbsYaml = parsed.images.length > 0
+    ? `\nthumbs:\n${parsed.images.map(u => `  - "${toThumbnailUrl(u)}"`).join("\n")}`
     : "";
 
   const date = new Date((m.modify_at || m.create_at || 0) * 1000).toISOString().split("T")[0];
@@ -455,6 +488,7 @@ async function processTextMoment(
     `source: https://www.xiaoheihe.cn/app/bbs/link/${m.linkid}`,
     coverYaml,
     imagesYaml,
+    thumbsYaml,
     "---",
     "",
   ].join("\n");

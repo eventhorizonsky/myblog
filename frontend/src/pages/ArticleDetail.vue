@@ -40,6 +40,12 @@ onMounted(() => { load(); });
 // 画廊模式
 const showGallery = computed(() => meta.value?.type === "blocks" && (meta.value?.images?.length || 0) > 0);
 const galleryImages = computed(() => meta.value?.images || []);
+// 文章页展示用缩略图；与 images 一一对应，缺失时退回原图
+const galleryThumbs = computed(() => {
+  const origin = meta.value?.images || [];
+  const thumb = meta.value?.thumbs || [];
+  return origin.map((u, i) => thumb[i] || u);
+});
 const currentImg = ref(0);
 
 function prevImg() {
@@ -62,23 +68,46 @@ function openLightbox(images: LightboxImage[], index: number) {
 
 function openGalleryLightbox(index: number) {
   currentImg.value = index;
-  openLightbox(galleryImages.value.map((src) => ({ src })), index);
+  // 灯箱用原图，缩略图作为占位
+  openLightbox(
+    galleryImages.value.map((src, i) => ({ src, thumb: galleryThumbs.value[i] })),
+    index,
+  );
 }
 
 const articleRef = ref<HTMLElement | null>(null);
 
+// 封面展示用缩略图：cover 与 images[0] 通常是同一张，优先取 thumbs 里对应那张
+const coverThumb = computed(() => {
+  const origin = meta.value?.images || [];
+  const thumb = meta.value?.thumbs || [];
+  const cover = meta.value?.cover || "";
+  const i = origin.indexOf(cover);
+  if (i >= 0 && thumb[i]) return thumb[i];
+  // 没有对应 thumbs 时，用原图地址拼压缩参数（仅小黑盒 CDN 生效）
+  return cover;
+});
+
 // 收集正文中的图片（排除 emoji 图标）
+// 展示用缩略图，灯箱要原图：优先取 data-origin（脚本写入的原图地址）
 function collectContentImages(): LightboxImage[] {
   const el = articleRef.value;
   if (!el) return [];
   return Array.from(el.querySelectorAll<HTMLImageElement>("img"))
     .filter((img) => !img.classList.contains("emoji-inline"))
-    .map((img) => ({ src: img.currentSrc || img.src, alt: img.alt || "" }));
+    .map((img) => ({
+      // 灯箱加载原图；没有 data-origin 的（如外部图片）退回当前地址
+      src: img.dataset.origin || img.currentSrc || img.src,
+      // 正文里显示的是缩略图，作为灯箱加载原图时的占位
+      thumb: img.currentSrc || img.src,
+      alt: img.alt || "",
+    }));
 }
 
 function openContentLightbox(target: HTMLImageElement) {
   const images = collectContentImages();
-  const index = images.findIndex((im) => im.src === (target.currentSrc || target.src));
+  const current = target.currentSrc || target.src;
+  const index = images.findIndex((im) => im.thumb === current || im.src === current);
   if (index >= 0) openLightbox(images, index);
 }
 
@@ -146,7 +175,7 @@ function onArticleClick(e: MouseEvent) {
         <Card class="overflow-hidden">
           <div class="relative bg-muted/50">
             <img
-              :src="galleryImages[currentImg]"
+              :src="galleryThumbs[currentImg]"
               class="w-full max-h-[70vh] object-contain mx-auto cursor-zoom-in"
               loading="lazy"
               decoding="async"
@@ -173,7 +202,7 @@ function onArticleClick(e: MouseEvent) {
           </div>
           <div v-if="galleryImages.length > 1" class="flex gap-1 p-2 overflow-x-auto">
             <div
-              v-for="(img, i) in galleryImages"
+              v-for="(img, i) in galleryThumbs"
               :key="i"
               @click="openGalleryLightbox(i)"
               :class="[
@@ -209,13 +238,13 @@ function onArticleClick(e: MouseEvent) {
           style="aspect-ratio: 16/9"
         >
           <img
-            :src="meta.cover"
+            :src="coverThumb"
             :alt="meta.title"
             class="w-full h-full object-cover"
             loading="lazy"
             decoding="async"
             @error="($event.target as HTMLImageElement).style.display = 'none'"
-            @click="openLightbox([{ src: meta.cover as string, alt: meta.title }], 0)"
+            @click="openLightbox([{ src: meta.cover as string, thumb: coverThumb, alt: meta.title }], 0)"
           />
         </div>
 

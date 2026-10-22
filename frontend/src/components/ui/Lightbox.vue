@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount } from "vue";
-import { X, ChevronLeft, ChevronRight } from "lucide-vue-next";
+import { X, ChevronLeft, ChevronRight, Loader2 } from "lucide-vue-next";
 
 export interface LightboxImage {
+  /** 大图地址（灯箱加载这个） */
   src: string;
+  /** 可选：已在页面里加载过的缩略图，作为原图加载前的占位，避免白屏 */
+  thumb?: string;
   alt?: string;
 }
 
@@ -18,9 +21,14 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{ close: [] }>();
 
 const index = ref(props.initialIndex);
+// 原图是否已加载完成（用于缩略图占位 → 原图淡入）
+const loaded = ref(false);
+
+// 切换图片时重置加载状态
+watch(index, () => { loaded.value = false; });
 
 watch(() => props.open, (val) => {
-  if (val) index.value = props.initialIndex;
+  if (val) { index.value = props.initialIndex; loaded.value = false; }
 });
 
 watch(() => props.initialIndex, (val) => {
@@ -114,14 +122,36 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
         <ChevronRight class="h-6 w-6" />
       </button>
 
-      <!-- 图片 -->
-      <img
-        v-if="images[index]"
-        :src="images[index].src"
-        :alt="images[index].alt"
-        class="max-w-[92vw] max-h-[85vh] object-contain select-none"
-        draggable="false"
-      />
+      <!-- 图片：先用正文里已缓存的缩略图占位，原图加载完成后再淡入 -->
+      <div v-if="images[index]" class="relative flex items-center justify-center">
+        <img
+          v-if="images[index].thumb && !loaded"
+          :src="images[index].thumb"
+          alt=""
+          class="max-w-[92vw] max-h-[85vh] object-contain select-none blur-sm opacity-70"
+          draggable="false"
+          aria-hidden="true"
+        />
+        <img
+          :key="images[index].src"
+          :src="images[index].src"
+          :alt="images[index].alt"
+          :class="[
+            'max-w-[92vw] max-h-[85vh] object-contain select-none transition-opacity duration-200',
+            images[index].thumb ? 'absolute inset-0 m-auto' : '',
+            loaded ? 'opacity-100' : 'opacity-0',
+          ]"
+          draggable="false"
+          @load="loaded = true"
+        />
+        <!-- 原图加载中的提示 -->
+        <div
+          v-if="!loaded"
+          class="absolute bottom-[-2rem] left-1/2 -translate-x-1/2 text-xs text-white/60 flex items-center gap-1"
+        >
+          <Loader2 class="h-3 w-3 animate-spin" /> 加载原图中…
+        </div>
+      </div>
 
       <!-- 底部信息：计数 + 说明 -->
       <div class="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-1 px-4 text-white/80">

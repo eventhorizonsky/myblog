@@ -6,7 +6,8 @@ export interface ArticleMeta {
   excerpt: string;
   type?: string;        // "html" | "blocks" | "text"
   cover?: string;       // 封面图（images 第一项）
-  images?: string[];    // 画廊图片 URL 列表
+  images?: string[];    // 原图 URL 列表（灯箱 / 下载用）
+  thumbs?: string[];    // 缩略图 URL 列表，与 images 一一对应（文章页展示用）
   linkid?: number;
   link_tag?: number;
   source?: string;
