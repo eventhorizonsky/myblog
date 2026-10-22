@@ -35,12 +35,18 @@ const HEIBOX_HEADERS: Record<string, string> = {
 // ============================================================
 // Types
 // ============================================================
+interface TopicItem { topic_id?: number; name?: string; app_id?: number; }
+
 interface MomentItem {
   linkid: number; title?: string; description: string;
   modify_at?: number; create_at?: number;
   link_type?: number; link_tag?: number; content_type?: number;
   duration?: string;
-  link?: { linkid: number; title?: string; description?: string; link_tag?: number };
+  topics?: TopicItem[];
+  link?: {
+    linkid: number; title?: string; description?: string; link_tag?: number;
+    topics?: TopicItem[]; modify_at?: number; create_at?: number;
+  };
   games?: Array<{ name: string; steam_appid: number; image: string }>;
   imgs?: string[];
 }
@@ -128,7 +134,7 @@ function parseContent(raw: string): { type: string; body: string; images: string
         const orig = toOriginalImageUrl(m[1]);
         imgs.push(orig);
       }
-      h = h.replace(re, (_all, src: string) => `\n![](${toOriginalImageUrl(src)})\n`);
+      h = h.replace(re, (_all: string, src: string) => `\n![](${toOriginalImageUrl(src)})\n`);
       h = h.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>\s*<p>/gi, "\n\n");
       h = h.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "\"");
       return { type: "html", body: h.trim(), images: imgs };
@@ -148,21 +154,78 @@ function slugify(text: string): string {
   return text.replace(/[^\w一-鿿]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
 }
 
-/** 计算某条动态对应的文章路径 */
-function articleOutputPath(m: MomentItem): string {
-  const category = tagToCategory(m.link_tag || 0);
-  const date = new Date((m.modify_at || m.create_at || 0) * 1000).toISOString().split("T")[0];
-  const slug = `${date}-${slugify(m.title || "untitled")}`;
-  return path.join(OUTPUT_DIR, "articles", category, `${slug}.md`);
+/**
+ * 文章存放目录：只区分「图文混排评测」与「社区帖」两类，与博客分类无关。
+ * 博客分类（kuro / zhou-pi / light-novel 等）写在 frontmatter 里，历史上这些文章
+ * 也一直存放在 community 或 review 目录下，所以目录不随分类变化，避免文件路径来回搬家。
+ */
+function outputDirName(tag: number): string {
+  return tag === 11 ? "review" : "community";
 }
 
-function tagToCategory(tag: number, contentType?: string): string {
-  // 游戏记录（短评）= game-comment
-  // 图文混排（评测帖 link_tag=11）= review
-  // 图文分开（社区帖 link_tag=27）= community
-  if (tag === 11) return "review";
-  if (tag === 27) return "community";
-  return "general";
+/** 计算某条动态对应的文章路径 */
+function articleOutputPath(m: MomentItem): string {
+  const dirName = outputDirName(m.link_tag || 0);
+  const date = new Date((m.modify_at || m.create_at || 0) * 1000).toISOString().split("T")[0];
+  const slug = `${date}-${slugify(m.title || "untitled")}`;
+  return path.join(OUTPUT_DIR, "articles", dirName, `${slug}.md`);
+}
+
+/**
+ * 社区（topics）→ 博客分类
+ * 博客的分类是按「发布在哪个社区」划分的，与 frontend/src/types.ts 的 CATEGORY_CONFIG 对应：
+ *   kuro = 鸣潮，zhou-pi = 明日方舟/终末地，light-novel = 轻小说（发布在「小说」社区），
+ *   galgame = Gal 游戏综合区，manga = 漫画推荐，no-tech = 没有技术的技术贴。
+ * 顺序有意义：越靠前的社区越优先（一篇帖子可能同时挂在多个社区下）。
+ */
+const TOPIC_CATEGORY_RULES: Array<{ match: RegExp[]; category: string }> = [
+  { match: [/鸣潮/i], category: "kuro" },
+  { match: [/明日方舟/, /终末地/], category: "zhou-pi" },
+  { match: [/新番|轻小说/], category: "light-novel" },
+  { match: [/gal\s*游戏/i], category: "galgame" },
+  { match: [/漫画/], category: "manga" },
+];
+
+/** 按标题关键词再兜底一次（历史文章的社区归属稳定，标题特征也稳定） */
+const TITLE_CATEGORY_RULES: Array<{ match: RegExp; category: string }> = [
+  { match: /轻小说/, category: "light-novel" },
+  { match: /漫画推荐/, category: "manga" },
+  { match: /鸣潮/, category: "kuro" },
+  { match: /终末地|明日方舟/, category: "zhou-pi" },
+];
+
+/**
+ * 教程/装机/技术向的关键词：命中则归到 no-tech。
+ * 只认明确的技术信号（教程、搭建、装机、NAS、重装系统…），
+ * 不要用「攻略 / 入坑 / 配置」这类词——游戏帖里也常出现，会误伤社区帖。
+ */
+const NO_TECH_RE = /教程|搭建|装机|NAS|nas|软路由|重装系统|清灰|换硅脂|汉化补丁|爆音|驱动|网盘|书库|录屏|录制|排查|修复|折腾/i;
+
+/**
+ * 决定一篇文章的博客分类。
+ * 依据：动态所属社区（topics）> 标题关键词；技术贴另按关键词归入 no-tech；
+ * 都不命中才回落到 community。
+ */
+function resolveCategory(m: MomentItem): string {
+  const topicNames = [
+    ...(m.topics || []),
+    ...(m.link?.topics || []),
+  ].map((t) => t?.name || "").filter(Boolean);
+
+  for (const rule of TOPIC_CATEGORY_RULES) {
+    if (topicNames.some((name) => rule.match.some((re) => re.test(name)))) return rule.category;
+  }
+
+  const title = `${m.title || ""} ${m.link?.title || ""}`;
+  for (const rule of TITLE_CATEGORY_RULES) {
+    if (rule.match.test(title)) return rule.category;
+  }
+
+  // 技术向技术贴：正文/标题里出现教程类关键词
+  const haystack = `${title} ${extractPlainText(m.description || "")}`;
+  if (NO_TECH_RE.test(haystack)) return "no-tech";
+
+  return "community";
 }
 
 /** 按 linkId 去重，保留数组中靠前（更新）的一条 */
@@ -373,7 +436,7 @@ async function processTextMoment(
     : "";
 
   const date = new Date((m.modify_at || m.create_at || 0) * 1000).toISOString().split("T")[0];
-  const category = tagToCategory(m.link_tag || 0);
+  const category = resolveCategory(m);
 
   const frontmatter = [
     "---",
