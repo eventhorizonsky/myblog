@@ -25,6 +25,35 @@ const index = ref(props.initialIndex);
 const loaded = ref(false);
 // 缩略图加载失败时，退回直接加载原图
 const thumbFailed = ref(false);
+// 是否显示加载提示。延迟出现，避免原图秒开时闪一下；
+// 加载完成后短暂显示「已切换为原图」，然后自动淡出。
+const showHint = ref(false);
+
+let hintTimer: ReturnType<typeof setTimeout> | undefined;
+let doneTimer: ReturnType<typeof setTimeout> | undefined;
+
+function clearHintTimers() {
+  if (hintTimer) { clearTimeout(hintTimer); hintTimer = undefined; }
+  if (doneTimer) { clearTimeout(doneTimer); doneTimer = undefined; }
+}
+
+/** 开始一轮新的加载提示计时 */
+function scheduleHint() {
+  clearHintTimers();
+  showHint.value = false;
+  // 原图 300ms 内加载完就不打扰用户
+  hintTimer = setTimeout(() => {
+    if (!loaded.value) showHint.value = true;
+  }, 300);
+}
+
+/** 原图加载完成：若有提示则改成「已切换为原图」，片刻后淡出 */
+function onOriginLoaded() {
+  loaded.value = true;
+  clearHintTimers();
+  if (!showHint.value) return;
+  doneTimer = setTimeout(() => { showHint.value = false; }, 1200);
+}
 
 const current = computed(() => props.images[index.value]);
 
@@ -47,11 +76,23 @@ const placeholderSrc = computed(() => {
   return img.src;
 });
 
-// 切换图片时重置加载状态
-watch(index, () => { loaded.value = false; thumbFailed.value = false; });
+// 切换图片时重置加载状态，并重新开始提示计时
+watch(index, () => {
+  loaded.value = false;
+  thumbFailed.value = false;
+  if (props.open) scheduleHint();
+});
 
 watch(() => props.open, (val) => {
-  if (val) { index.value = props.initialIndex; loaded.value = false; thumbFailed.value = false; }
+  if (val) {
+    index.value = props.initialIndex;
+    loaded.value = false;
+    thumbFailed.value = false;
+    scheduleHint();
+  } else {
+    clearHintTimers();
+    showHint.value = false;
+  }
 });
 
 watch(() => props.initialIndex, (val) => {
@@ -98,12 +139,15 @@ function onTouchEnd(e: TouchEvent) {
 watch(() => props.open, (val) => {
   document.body.style.overflow = val ? "hidden" : "";
 });
-onBeforeUnmount(() => {
-  document.body.style.overflow = "";
-});
 
 onMounted(() => window.addEventListener("keydown", onKeydown));
-onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
+
+// 统一在卸载时清理：恢复滚动、移除键盘监听、清掉提示定时器
+onBeforeUnmount(() => {
+  document.body.style.overflow = "";
+  window.removeEventListener("keydown", onKeydown);
+  clearHintTimers();
+});
 </script>
 
 <template>
@@ -172,14 +216,26 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
           class="absolute inset-0 w-full h-full object-contain select-none transition-opacity duration-200"
           :class="loaded ? 'opacity-100' : 'opacity-0'"
           draggable="false"
-          @load="loaded = true"
+          @load="onOriginLoaded"
         />
-        <!-- 原图加载中的提示 -->
+        <!--
+          原图加载中的提醒：浮在图片区域内，非阻断。
+          说明「当前看到的是压缩预览」，加载完成后自动消失。
+        -->
         <div
-          v-if="needsOrigin && !loaded"
-          class="absolute bottom-[-2rem] left-0 right-0 flex items-center justify-center gap-1 text-xs text-white/60 pointer-events-none"
+          v-if="needsOrigin"
+          class="absolute top-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none
+                 flex items-center gap-1.5 whitespace-nowrap
+                 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white/90
+                 ring-1 ring-white/15 backdrop-blur-sm
+                 transition-opacity duration-300"
+          :class="showHint ? 'opacity-100' : 'opacity-0'"
+          role="status"
+          aria-live="polite"
         >
-          <Loader2 class="h-3 w-3 animate-spin" /> 加载原图中…
+          <Loader2 class="h-3.5 w-3.5 animate-spin shrink-0" />
+          <span v-if="!loaded">原图加载中 · 当前为压缩预览</span>
+          <span v-else>已切换为原图</span>
         </div>
       </div>
 
