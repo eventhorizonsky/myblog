@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
-import { X, ChevronLeft, ChevronRight, Loader2 } from "lucide-vue-next";
+import { X, ChevronLeft, ChevronRight, Loader2, Check } from "lucide-vue-next";
 
 export interface LightboxImage {
   /** 大图地址（灯箱加载这个） */
@@ -233,7 +233,9 @@ onBeforeUnmount(() => {
           role="status"
           aria-live="polite"
         >
-          <Loader2 class="h-3.5 w-3.5 animate-spin shrink-0" />
+          <!-- 加载中用转圈，已完成用对勾 -->
+          <Loader2 v-if="!loaded" class="h-3.5 w-3.5 animate-spin shrink-0" />
+          <Check v-else class="h-3.5 w-3.5 shrink-0 text-emerald-400" />
           <span v-if="!loaded">原图加载中 · 当前为压缩预览</span>
           <span v-else>已切换为原图</span>
         </div>
