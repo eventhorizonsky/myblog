@@ -119,6 +119,11 @@ function onArticleClick(e: MouseEvent) {
   openContentLightbox(target as HTMLImageElement);
 }
 
+// ====== 宽屏判断（侧栏只在 ≥1280px 出现，与 CSS 的 xl 断点保持一致） ======
+// 窄屏完全不需要侧栏的数据，提前判断可以避免为空跑的侧栏发请求
+const XL_QUERY = "(min-width: 1280px)";
+const isWide = ref(typeof window !== "undefined" && window.matchMedia(XL_QUERY).matches);
+
 // ====== 侧栏：正文图片导航 ======
 // 长文常有几十张图，侧栏给个可点击的小索引，点一条跳转到对应图片
 const contentImageCount = ref(0);
@@ -134,19 +139,29 @@ function scrollToContentImage(n: number) {
   }
 }
 
-// 正文渲染后统计图片数量
+// 正文渲染后统计图片数量（图片导航只在宽屏侧栏用，窄屏不必统计）
 watch(html, async () => {
   await nextTick();
+  if (!isWide.value) { contentImageCount.value = 0; return; }
   const el = articleRef.value;
   if (!el) { contentImageCount.value = 0; return; }
   contentImageCount.value = Array.from(el.querySelectorAll("img"))
     .filter((img) => !img.classList.contains("emoji-inline")).length;
 });
 
-// ====== 侧栏：同分类相关文章 ======
+// ====== 侧栏：同分类相关文章（仅宽屏需要） ======
 const related = ref<ArticleMeta[]>([]);
 
+let mql: MediaQueryList | undefined;
+
+function onViewportChange(e: MediaQueryListEvent) {
+  isWide.value = e.matches;
+  // 切到宽屏时才需要相关文章，切走后保留已加载的数据即可
+  if (e.matches && related.value.length === 0) loadRelated();
+}
+
 async function loadRelated() {
+  if (!isWide.value) return;
   try {
     const all = await fetchArticles();
     const cat = meta.value?.category;
@@ -161,9 +176,14 @@ async function loadRelated() {
 
 watch(meta, () => { loadRelated(); });
 
-// 移动端侧栏折叠
-const metaOpen = ref(false);
-const relatedOpen = ref(false);
+onMounted(() => {
+  mql = window.matchMedia(XL_QUERY);
+  mql.addEventListener("change", onViewportChange);
+});
+
+onUnmounted(() => {
+  mql?.removeEventListener("change", onViewportChange);
+});
 </script>
 
 <template>
@@ -194,13 +214,14 @@ const relatedOpen = ref(false);
 
     <template v-else>
       <!-- 三栏布局：左（元信息/图片导航） · 中（正文） · 右（相关文章）
-           宽屏 xl 以上才并排显示侧栏；窄屏自动堆叠为单列，正文单独收窄以保证可读性 -->
+           左右侧栏只在宽屏（xl ≥1280px）出现，纯粹用于撑住版面、平衡留白；
+           移动/平板端直接隐藏，正文单独收窄居中，保证阅读不被打扰。 -->
       <div class="mx-auto w-full max-w-[52rem] xl:max-w-none
                   xl:grid xl:grid-cols-[15rem_minmax(0,56rem)_15rem] xl:gap-8
                   xl:justify-center items-start">
 
-        <!-- ===== 左栏 ===== -->
-        <aside class="xl:sticky xl:top-6 order-2 xl:order-1">
+        <!-- ===== 左栏（仅宽屏渲染，窄屏不进 DOM） ===== -->
+        <aside v-if="isWide" class="xl:sticky xl:top-6">
           <!-- 元信息卡片 -->
           <Card class="overflow-hidden">
             <div class="p-4">
@@ -263,7 +284,7 @@ const relatedOpen = ref(false);
         </aside>
 
         <!-- ===== 中栏：正文 ===== -->
-        <div class="order-1 xl:order-2 min-w-0">
+        <div class="min-w-0">
           <!-- Header -->
           <div class="mb-8">
             <div class="flex items-center gap-2 mb-3">
@@ -384,8 +405,8 @@ const relatedOpen = ref(false);
       <GiscusComments :config="GISCUS_CONFIG" :article-id="meta.id" />
         </div>
 
-        <!-- ===== 右栏：同分类相关文章 ===== -->
-        <aside class="xl:sticky xl:top-6 order-3">
+        <!-- ===== 右栏（仅宽屏渲染）：同分类相关文章 ===== -->
+        <aside v-if="isWide" class="xl:sticky xl:top-6">
           <Card v-if="related.length" class="overflow-hidden">
             <div class="p-4">
               <p class="text-xs font-medium text-muted-foreground mb-3">同类文章</p>
