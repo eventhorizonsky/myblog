@@ -135,6 +135,25 @@ git -c core.safecrlf=false commit -m "sync: 同步小黑盒动态 N 篇（标题
 git push origin main
 ```
 
+### 图片备份有独立仓库（别混淆）
+
+`frontend/content-images/` 是一个**独立的本地 git 仓库**，和主仓完全隔离：
+
+- 主仓 `.gitignore` 里有 `**/content-images/`，所以 **`git add -A` 不会把它带进主仓**，也不会被推送。
+- 该目录下有自己的 `.git`，专门用来防「图片被改坏后无法恢复」。
+- **不要把这两个仓库的 git 命令搞混**。给图片存档时：
+
+```powershell
+cd D:\MyProject\myblog\frontend\content-images
+git add -A
+git commit -m "sync: 新增 N 张图"
+# 单张图被改坏时恢复：
+# git checkout -- <相对路径>
+```
+
+- 这个仓库没有 remote，是纯本地备份，**不要给它配置远端，也不要 push**。
+
+
 推送 `main` 会触发 `.github/workflows/docker-publish.yml` 自动构建部署，**线上更新靠这一步**。
 
 ## 五、分类规则（重要）
