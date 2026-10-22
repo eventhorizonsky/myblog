@@ -43,6 +43,10 @@ npm run build        # → dist/
 
 ### 小黑盒动态
 
+> **给 AI Agent 的说明**：本仓库内置了 `myblog-heibox-sync` skill
+> （`.dsh/skills/myblog-heibox-sync/SKILL.md`）。在这个目录下收到新 Cookie 要求更新博客时，
+> **先加载该 skill 并照它执行**，不要重新摸索仓库结构。
+
 ```bash
 cd scripts
 npm install
