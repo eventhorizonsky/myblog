@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
-import { fetchArticle, renderMarkdown } from "@/utils/markdown";
+import { fetchArticle, fetchArticles, renderMarkdown } from "@/utils/markdown";
 import type { ArticleMeta } from "@/types";
 import Card from "@/components/ui/Card.vue";
 import Badge from "@/components/ui/Badge.vue";
 import Lightbox, { type LightboxImage } from "@/components/ui/Lightbox.vue";
 import { CATEGORY_CONFIG } from "@/types";
-import { ArrowLeft, ExternalLink, Calendar, ChevronLeft, ChevronRight, Loader2, AlertCircle } from "lucide-vue-next";
+import { ArrowLeft, ExternalLink, Calendar, ChevronLeft, ChevronRight, Loader2, AlertCircle, ImageIcon } from "lucide-vue-next";
 import GiscusComments from "@/components/GiscusComments.vue";
 import { GISCUS_CONFIG } from "@/config/giscus";
 
@@ -118,10 +118,57 @@ function onArticleClick(e: MouseEvent) {
   if (target.closest("a")) return;
   openContentLightbox(target as HTMLImageElement);
 }
+
+// ====== 侧栏：正文图片导航 ======
+// 长文常有几十张图，侧栏给个可点击的小索引，点一条跳转到对应图片
+const contentImageCount = ref(0);
+// 图片在正文中的序号（1-based），点「第 N 张」滚到第 N 张图
+function scrollToContentImage(n: number) {
+  const el = articleRef.value;
+  if (!el) return;
+  const imgs = Array.from(el.querySelectorAll<HTMLImageElement>("img"))
+    .filter((img) => !img.classList.contains("emoji-inline"));
+  const target = imgs[n - 1];
+  if (target) {
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
+// 正文渲染后统计图片数量
+watch(html, async () => {
+  await nextTick();
+  const el = articleRef.value;
+  if (!el) { contentImageCount.value = 0; return; }
+  contentImageCount.value = Array.from(el.querySelectorAll("img"))
+    .filter((img) => !img.classList.contains("emoji-inline")).length;
+});
+
+// ====== 侧栏：同分类相关文章 ======
+const related = ref<ArticleMeta[]>([]);
+
+async function loadRelated() {
+  try {
+    const all = await fetchArticles();
+    const cat = meta.value?.category;
+    related.value = all
+      .filter((a) => a.id !== meta.value?.id && a.category === cat)
+      .sort((a, b) => (a.date < b.date ? 1 : -1))
+      .slice(0, 6);
+  } catch {
+    related.value = [];
+  }
+}
+
+watch(meta, () => { loadRelated(); });
+
+// 移动端侧栏折叠
+const metaOpen = ref(false);
+const relatedOpen = ref(false);
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+  <!-- 宽屏给三栏留出空间（15rem + 56rem + 15rem + 间距 ≈ 90rem），窄屏由内部 max-w 收窄 -->
+  <div class="max-w-[92rem] mx-auto px-4 sm:px-6 py-8">
     <button
       @click="router.push('/articles')"
       class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
@@ -146,29 +193,100 @@ function onArticleClick(e: MouseEvent) {
     </div>
 
     <template v-else>
-      <!-- Header -->
-      <div class="mb-8">
-        <div class="flex items-center gap-2 mb-3">
-          <Badge variant="outline" :class="['text-xs px-1.5 py-0', CATEGORY_CONFIG[meta.category]?.color || '']">
-            {{ CATEGORY_CONFIG[meta.category]?.label || meta.category }}
-          </Badge>
-          <span class="text-sm text-muted-foreground flex items-center gap-1">
-            <Calendar class="h-3.5 w-3.5" />
-            {{ meta.date }}
-          </span>
-          <a
-            v-if="meta.source"
-            :href="meta.source"
-            target="_blank"
-            rel="noopener"
-            class="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 ml-auto"
-          >
-            <ExternalLink class="h-3 w-3" />
-            原文
-          </a>
-        </div>
-        <h1 class="text-2xl font-bold tracking-tight" v-html="meta.title" />
-      </div>
+      <!-- 三栏布局：左（元信息/图片导航） · 中（正文） · 右（相关文章）
+           宽屏 xl 以上才并排显示侧栏；窄屏自动堆叠为单列，正文单独收窄以保证可读性 -->
+      <div class="mx-auto w-full max-w-[52rem] xl:max-w-none
+                  xl:grid xl:grid-cols-[15rem_minmax(0,56rem)_15rem] xl:gap-8
+                  xl:justify-center items-start">
+
+        <!-- ===== 左栏 ===== -->
+        <aside class="xl:sticky xl:top-6 order-2 xl:order-1">
+          <!-- 元信息卡片 -->
+          <Card class="overflow-hidden">
+            <div class="p-4">
+              <p class="text-xs font-medium text-muted-foreground mb-2">文章信息</p>
+              <dl class="space-y-2 text-sm">
+                <div class="flex items-center justify-between gap-2">
+                  <dt class="text-muted-foreground">分类</dt>
+                  <dd>
+                    <Badge variant="outline" :class="['text-xs px-1.5 py-0', CATEGORY_CONFIG[meta.category]?.color || '']">
+                      {{ CATEGORY_CONFIG[meta.category]?.label || meta.category }}
+                    </Badge>
+                  </dd>
+                </div>
+                <div class="flex items-center justify-between gap-2">
+                  <dt class="text-muted-foreground">发布</dt>
+                  <dd class="flex items-center gap-1 text-xs">
+                    <Calendar class="h-3 w-3" />{{ meta.date }}
+                  </dd>
+                </div>
+                <div v-if="contentImageCount > 0" class="flex items-center justify-between gap-2">
+                  <dt class="text-muted-foreground">图片</dt>
+                  <dd class="text-xs flex items-center gap-1">
+                    <ImageIcon class="h-3 w-3" />{{ contentImageCount }} 张
+                  </dd>
+                </div>
+              </dl>
+              <a
+                v-if="meta.source"
+                :href="meta.source"
+                target="_blank"
+                rel="noopener"
+                class="mt-3 pt-3 border-t flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                <ExternalLink class="h-3 w-3" />查看小黑盒原文
+              </a>
+            </div>
+          </Card>
+
+          <!-- 图片导航：长文几十张图时，点序号直接跳转 -->
+          <Card v-if="contentImageCount > 1" class="mt-4 overflow-hidden">
+            <div class="p-4">
+              <p class="text-xs font-medium text-muted-foreground mb-2">
+                图片导航 <span class="text-muted-foreground/60">({{ contentImageCount }})</span>
+              </p>
+              <div class="flex flex-wrap gap-1">
+                <button
+                  v-for="n in contentImageCount"
+                  :key="n"
+                  @click="scrollToContentImage(n)"
+                  class="h-6 min-w-6 px-1.5 rounded text-[11px] tabular-nums
+                         bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground
+                         transition-colors"
+                  :title="`跳到第 ${n} 张`"
+                >
+                  {{ n }}
+                </button>
+              </div>
+            </div>
+          </Card>
+        </aside>
+
+        <!-- ===== 中栏：正文 ===== -->
+        <div class="order-1 xl:order-2 min-w-0">
+          <!-- Header -->
+          <div class="mb-8">
+            <div class="flex items-center gap-2 mb-3">
+              <Badge variant="outline" :class="['text-xs px-1.5 py-0', CATEGORY_CONFIG[meta.category]?.color || '']">
+                {{ CATEGORY_CONFIG[meta.category]?.label || meta.category }}
+              </Badge>
+              <span class="text-sm text-muted-foreground flex items-center gap-1">
+                <Calendar class="h-3.5 w-3.5" />
+                {{ meta.date }}
+              </span>
+              <a
+                v-if="meta.source"
+                :href="meta.source"
+                target="_blank"
+                rel="noopener"
+                class="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 ml-auto"
+              >
+                <ExternalLink class="h-3 w-3" />
+                原文
+              </a>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight" v-html="meta.title" />
+          </div>
 
       <!-- 画廊模式：图文分开（blocks 类型） -->
       <div v-if="showGallery" class="space-y-6">
@@ -181,8 +299,7 @@ function onArticleClick(e: MouseEvent) {
               decoding="async"
               style="min-height: 300px"
               @click="openGalleryLightbox(currentImg)"
-            />
-            <button
+            />            <button
               v-if="galleryImages.length > 1"
               @click.stop="prevImg"
               class="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/80 hover:bg-background shadow transition-colors"
@@ -265,6 +382,36 @@ function onArticleClick(e: MouseEvent) {
 
       <!-- GitHub Discussions 评论 -->
       <GiscusComments :config="GISCUS_CONFIG" :article-id="meta.id" />
+        </div>
+
+        <!-- ===== 右栏：同分类相关文章 ===== -->
+        <aside class="xl:sticky xl:top-6 order-3">
+          <Card v-if="related.length" class="overflow-hidden">
+            <div class="p-4">
+              <p class="text-xs font-medium text-muted-foreground mb-3">同类文章</p>
+              <ul class="space-y-3">
+                <li v-for="a in related" :key="a.id">
+                  <router-link
+                    :to="`/articles/${a.id}`"
+                    class="group block"
+                  >
+                    <p class="text-sm leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                      {{ a.title }}
+                    </p>
+                    <p class="mt-0.5 text-[11px] text-muted-foreground">{{ a.date }}</p>
+                  </router-link>
+                </li>
+              </ul>
+              <router-link
+                to="/articles"
+                class="mt-3 pt-3 border-t flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                <ArrowLeft class="h-3 w-3" />全部文章
+              </router-link>
+            </div>
+          </Card>
+        </aside>
+      </div>
     </template>
 
     <Lightbox
