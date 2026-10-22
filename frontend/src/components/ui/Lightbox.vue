@@ -193,16 +193,14 @@ onBeforeUnmount(() => {
       <div v-if="images[index]" class="relative">
         <!--
           占位层：负责决定容器尺寸，保证整块居中且不变形。
-          原图加载完成后给它加 opacity-0 隐藏（但保留占位，避免容器塌缩导致位置跳动）。
+          在原图到达前，它显示的是正文里已经加载好的缩略图（清晰可见，不做模糊处理）；
+          原图加载完成后淡出，由覆盖层接管。
         -->
         <img
           :src="placeholderSrc"
           alt=""
           class="max-w-[92vw] max-h-[85vh] object-contain select-none transition-opacity duration-200"
-          :class="[
-            needsOrigin && !loaded ? 'blur-sm opacity-80' : '',
-            needsOrigin && loaded ? 'opacity-0' : '',
-          ]"
+          :class="needsOrigin && loaded ? 'opacity-0' : ''"
           draggable="false"
           aria-hidden="true"
           @error="thumbFailed = true"
