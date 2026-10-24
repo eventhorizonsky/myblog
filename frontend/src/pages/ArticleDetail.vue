@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
-import { fetchArticle, fetchArticles, renderMarkdown } from "@/utils/markdown";
+import { fetchArticle, fetchArticles, renderMarkdown, resolveAssetUrl } from "@/utils/markdown";
+import { getListPath } from "@/utils/scroll-memory";
 import type { ArticleMeta } from "@/types";
 import Card from "@/components/ui/Card.vue";
 import Badge from "@/components/ui/Badge.vue";
 import Lightbox, { type LightboxImage } from "@/components/ui/Lightbox.vue";
-import { CATEGORY_CONFIG } from "@/types";
-import { ArrowLeft, ExternalLink, Calendar, ChevronLeft, ChevronRight, Loader2, AlertCircle, ImageIcon } from "lucide-vue-next";
+import { CATEGORY_CONFIG, OUTDATED_BADGE_COLOR } from "@/types";
+import { ArrowLeft, ArrowUp, ExternalLink, Calendar, ChevronLeft, ChevronRight, Loader2, AlertCircle, ImageIcon, CircleSlash } from "lucide-vue-next";
 import GiscusComments from "@/components/GiscusComments.vue";
 import { GISCUS_CONFIG } from "@/config/giscus";
 
@@ -18,6 +19,9 @@ const meta = ref<ArticleMeta | null>(null);
 const html = ref("");
 const loading = ref(false);
 const error = ref(false);
+
+// 返回列表时带上来源列表的筛选条件（从哪来就回哪去）
+const backToList = () => router.push(getListPath());
 
 async function load() {
   loading.value = true;
@@ -83,9 +87,9 @@ const coverThumb = computed(() => {
   const thumb = meta.value?.thumbs || [];
   const cover = meta.value?.cover || "";
   const i = origin.indexOf(cover);
-  if (i >= 0 && thumb[i]) return thumb[i];
-  // 没有对应 thumbs 时，用原图地址拼压缩参数（仅小黑盒 CDN 生效）
-  return cover;
+  // 正文里的相对路径封面（halo-images/...）需要补 BASE_URL 才能访问
+  if (i >= 0 && thumb[i]) return resolveAssetUrl(thumb[i]);
+  return resolveAssetUrl(cover);
 });
 
 // 收集正文中的图片（排除 emoji 图标）
@@ -117,6 +121,20 @@ function onArticleClick(e: MouseEvent) {
   // 图片被链接包裹时保留链接行为
   if (target.closest("a")) return;
   openContentLightbox(target as HTMLImageElement);
+}
+
+// ====== 回到顶部 ======
+// 文章动辄几十张图、上万字，滚到底后回顶很费劲，加一个悬浮按钮。
+// 只在向下滚动超过一屏后出现，避免和首屏内容抢注意力。
+const showBackToTop = ref(false);
+const BACK_TO_TOP_THRESHOLD = 400;
+
+function onScrollForBackToTop() {
+  showBackToTop.value = window.scrollY > BACK_TO_TOP_THRESHOLD;
+}
+
+function backToTop() {
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 // ====== 宽屏判断（侧栏只在 ≥1280px 出现，与 CSS 的 xl 断点保持一致） ======
@@ -179,10 +197,15 @@ watch(meta, () => { loadRelated(); });
 onMounted(() => {
   mql = window.matchMedia(XL_QUERY);
   mql.addEventListener("change", onViewportChange);
+
+  // 进入文章时重置并监听滚动，决定回到顶部按钮是否出现
+  onScrollForBackToTop();
+  window.addEventListener("scroll", onScrollForBackToTop, { passive: true });
 });
 
 onUnmounted(() => {
   mql?.removeEventListener("change", onViewportChange);
+  window.removeEventListener("scroll", onScrollForBackToTop);
 });
 </script>
 
@@ -190,7 +213,7 @@ onUnmounted(() => {
   <!-- 宽屏给三栏留出空间（15rem + 56rem + 15rem + 间距 ≈ 90rem），窄屏由内部 max-w 收窄 -->
   <div class="max-w-[92rem] mx-auto px-4 sm:px-6 py-8">
     <button
-      @click="router.push('/articles')"
+      @click="backToList()"
       class="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
     >
       <ArrowLeft class="h-4 w-4" />
@@ -209,7 +232,7 @@ onUnmounted(() => {
       <p class="text-sm">ID: {{ id }}</p>
       <button @click="load()" class="mt-4 text-primary hover:underline text-sm">重新加载</button>
       <br />
-      <button @click="router.push('/articles')" class="mt-2 text-muted-foreground hover:underline text-sm">返回文章列表</button>
+      <button @click="backToList()" class="mt-2 text-muted-foreground hover:underline text-sm">返回文章列表</button>
     </div>
 
     <template v-else>
@@ -291,6 +314,13 @@ onUnmounted(() => {
               <Badge variant="outline" :class="['text-xs px-1.5 py-0', CATEGORY_CONFIG[meta.category]?.color || '']">
                 {{ CATEGORY_CONFIG[meta.category]?.label || meta.category }}
               </Badge>
+              <Badge
+                v-if="meta.outdated"
+                variant="outline"
+                :class="['text-xs px-1.5 py-0 inline-flex items-center gap-1', OUTDATED_BADGE_COLOR]"
+              >
+                <CircleSlash class="h-2.5 w-2.5" />过时
+              </Badge>
               <span class="text-sm text-muted-foreground flex items-center gap-1">
                 <Calendar class="h-3.5 w-3.5" />
                 {{ meta.date }}
@@ -307,6 +337,21 @@ onUnmounted(() => {
               </a>
             </div>
             <h1 class="text-2xl sm:text-3xl font-bold tracking-tight" v-html="meta.title" />
+
+            <!-- 过时提示条 -->
+            <div
+              v-if="meta.outdated"
+              class="mt-5 flex items-start gap-2.5 rounded-lg border border-amber-300/70 bg-amber-50 px-3.5 py-3
+                     dark:border-amber-500/30 dark:bg-amber-500/10"
+            >
+              <CircleSlash class="h-4 w-4 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
+              <div class="text-xs leading-relaxed text-amber-800 dark:text-amber-300">
+                <p class="font-medium">本文内容已过时</p>
+                <p class="mt-0.5 text-amber-700/90 dark:text-amber-300/80">
+                  文中提到的软件、下载链接或方法可能已经失效或停止维护，请以最新情况为准。
+                </p>
+              </div>
+            </div>
           </div>
 
       <!-- 画廊模式：图文分开（blocks 类型） -->
@@ -382,7 +427,7 @@ onUnmounted(() => {
             loading="lazy"
             decoding="async"
             @error="($event.target as HTMLImageElement).style.display = 'none'"
-            @click="openLightbox([{ src: meta.cover as string, thumb: coverThumb, alt: meta.title }], 0)"
+            @click="openLightbox([{ src: resolveAssetUrl(meta.cover as string), thumb: coverThumb, alt: meta.title }], 0)"
           />
         </div>
 
@@ -424,7 +469,7 @@ onUnmounted(() => {
                 </li>
               </ul>
               <router-link
-                to="/articles"
+                :to="getListPath()"
                 class="mt-3 pt-3 border-t flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
               >
                 <ArrowLeft class="h-3 w-3" />全部文章
@@ -441,5 +486,29 @@ onUnmounted(() => {
       :initial-index="lightboxIndex"
       @close="lightboxOpen = false"
     />
+
+    <!-- 回到顶部（长文滚过一屏后出现） -->
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0 translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 translate-y-2"
+    >
+      <button
+        v-if="showBackToTop"
+        @click="backToTop"
+        aria-label="回到顶部"
+        title="回到顶部"
+        class="fixed bottom-6 right-6 z-40 h-11 w-11 rounded-full
+               bg-background/90 backdrop-blur border shadow-lg
+               flex items-center justify-center
+               text-muted-foreground hover:text-primary hover:border-primary/50
+               transition-colors"
+      >
+        <ArrowUp class="h-5 w-5" />
+      </button>
+    </Transition>
   </div>
 </template>

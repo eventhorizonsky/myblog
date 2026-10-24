@@ -28,6 +28,8 @@ type ArticleMeta struct {
 	LinkID   int      `json:"linkid,omitempty"`
 	LinkTag  int      `json:"link_tag,omitempty"`
 	Source   string   `json:"source,omitempty"`
+	Outdated bool     `json:"outdated,omitempty"`
+	Slug     string   `json:"slug,omitempty"`
 }
 
 // ArticleDetail 文章详情（元数据 + 原始 Markdown）
@@ -72,11 +74,16 @@ func LoadArticles(contentDir string) error {
 			fileID := filepath.Base(path)
 			fileID = strings.TrimSuffix(fileID, ".md")
 
-			// 对外 id 优先用 linkid：纯 ASCII（URL 不出现中文/百分号编码），
-			// 且不随标题/日期变更而变（giscus 等按 pathname 关联的评论不会丢）
+			// 对外 id 优先级：slug > linkid > 文件名。
+			// slug：纯 ASCII（URL 不出现中文/百分号编码），可读且稳定；
+			// linkid：小黑盒文章沿用旧规则，保证 giscus 按 pathname 关联的评论不丢；
+			// 文件名：兜底，兼容没有 slug / linkid 的本地文章。
 			id := fileID
 			if meta.LinkID > 0 {
 				id = strconv.FormatInt(int64(meta.LinkID), 10)
+			}
+			if meta.Slug != "" {
+				id = meta.Slug
 			}
 			meta.ID = id
 
@@ -87,9 +94,21 @@ func LoadArticles(contentDir string) error {
 
 			articlesMeta = append(articlesMeta, meta)
 			articlesDetail[id] = &ArticleDetail{ArticleMeta: meta, Content: content}
-			// 保留旧文件名 id 别名，旧链接（如 /api/articles/2026-08-29-3-6简评）不失效
-			if fileID != id {
-				articlesDetail[fileID] = articlesDetail[id]
+			// 保留旧 id 别名，旧链接不失效：文件名、linkid、slug 都能访问到同一篇
+			for _, alias := range []string{fileID, meta.Slug} {
+				if alias != "" && alias != id {
+					if _, exists := articlesDetail[alias]; !exists {
+						articlesDetail[alias] = articlesDetail[id]
+					}
+				}
+			}
+			if meta.LinkID > 0 {
+				lid := strconv.FormatInt(int64(meta.LinkID), 10)
+				if lid != id {
+					if _, exists := articlesDetail[lid]; !exists {
+						articlesDetail[lid] = articlesDetail[id]
+					}
+				}
 			}
 
 			return nil
@@ -265,6 +284,12 @@ func setMetaField(meta *ArticleMeta, key string, value interface{}) {
 		meta.Cover = value.(string)
 	case "source":
 		meta.Source = value.(string)
+	case "outdated":
+		if v, ok := value.(string); ok {
+			meta.Outdated = strings.EqualFold(v, "true") || v == "1" || strings.EqualFold(v, "yes")
+		}
+	case "slug":
+		meta.Slug = value.(string)
 	case "linkid":
 		if v, ok := value.(string); ok {
 			fmt.Sscanf(v, "%d", &meta.LinkID)

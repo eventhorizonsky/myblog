@@ -1,13 +1,18 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import type { ArticleMeta } from "@/types";
-import { CATEGORY_CONFIG } from "@/types";
+import { CATEGORY_CONFIG, OUTDATED_BADGE_COLOR } from "@/types";
+import { resolveAssetUrl } from "@/utils/markdown";
 import { cn } from "@/utils/cn";
 import Card from "@/components/ui/Card.vue";
 import Badge from "@/components/ui/Badge.vue";
-import { Calendar } from "lucide-vue-next";
+import { Calendar, CircleSlash } from "lucide-vue-next";
 
 const props = defineProps<{ article: ArticleMeta }>();
 const catConfig = CATEGORY_CONFIG[props.article.category] || { label: props.article.category || "文章", color: "" };
+// 封面可能是文章里的相对路径，列表页在根路由下相对路径本身可用，
+// 但统一走 resolveAssetUrl 才能兼容子路径部署（GitHub Pages）
+const coverSrc = computed(() => resolveAssetUrl(props.article.cover || ""));
 
 // 基于标题字符串选一个渐变
 const gradients = [
@@ -32,7 +37,7 @@ const placeholderGradient = gradients[gradIdx];
         style="aspect-ratio: 16/9"
       >
         <img
-          :src="article.cover"
+          :src="coverSrc"
           class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
           decoding="async"
@@ -54,6 +59,14 @@ const placeholderGradient = gradients[gradIdx];
         <div class="flex items-center gap-2 mb-2">
           <Badge variant="outline" :class="cn('text-xs px-1.5 py-0 shrink-0', catConfig.color)">
             {{ catConfig.label }}
+          </Badge>
+          <Badge
+            v-if="article.outdated"
+            variant="outline"
+            :class="cn('text-xs px-1.5 py-0 shrink-0 gap-1', OUTDATED_BADGE_COLOR)"
+            title="内容已过时"
+          >
+            <CircleSlash class="h-2.5 w-2.5" />过时
           </Badge>
           <span class="text-xs text-muted-foreground flex items-center gap-1">
             <Calendar class="h-3 w-3" />

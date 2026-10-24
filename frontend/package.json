@@ -12,6 +12,7 @@
     "@tailwindcss/typography": "^0.5.20",
     "clsx": "^2.1.1",
     "gray-matter": "^4.0.3",
+    "highlight.js": "^11.12.0",
     "lucide-vue-next": "^0.453.0",
     "markdown-it": "^14.1.0",
     "tailwind-merge": "^2.6.0",

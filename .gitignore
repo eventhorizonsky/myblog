@@ -42,5 +42,8 @@ content/articles/
 backend/myblog-server*
 backend/tmp/
 
+# 一次性导入中产生的中间文件（Halo 备份解析快照等）
+halo-import/
+
 # OS
 Thumbs.db
